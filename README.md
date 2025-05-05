@@ -1,5 +1,7 @@
 # Capa
 
+![Estrutura - Portfólio (TCC) (1)](https://github.com/user-attachments/assets/b5384686-b2ce-4b62-ab14-5280e21f88b6)
+
 * **Título do Projeto**: CrimiMap - Plataforma de Análise Integrada da Segurança Pública
 * **Nome do Estudante**: Davi Andrzejewski Junkes
 * **Curso**: Engenharia de Software
