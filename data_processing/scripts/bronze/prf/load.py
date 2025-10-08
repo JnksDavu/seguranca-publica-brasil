@@ -14,7 +14,7 @@ DB = os.getenv("DB")
 
 engine = create_engine(f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}", future=True)
 
-DATASET_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../dataset/prf"))
+DATASET_DIR = "/home/tcc/seguranca-publica-brasil/data_processing/dataset/prf"
 csv_files = sorted(glob.glob(os.path.join(DATASET_DIR, "*.csv")))
 
 if not csv_files:
