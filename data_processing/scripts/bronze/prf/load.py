@@ -28,7 +28,7 @@ for f in csv_files:
 chunksize = 100_000  
 
 for csv_file in csv_files:
-    print(f"\n Iniciando importação de: {os.path.basename(csv_file)}")
+    print(f"\nIniciando importação de: {os.path.basename(csv_file)}")
 
     for i, chunk in enumerate(pd.read_csv(
             csv_file,
@@ -37,7 +37,6 @@ for csv_file in csv_files:
             chunksize=chunksize,
             dtype=str
         )):
-        # Conversões de tipos
         if "pesid" in chunk.columns:
             chunk["pesid"] = pd.to_numeric(chunk["pesid"], errors="coerce")
         if "idade" in chunk.columns:
@@ -51,17 +50,18 @@ for csv_file in csv_files:
                 chunk["horario"], format="%H:%M:%S", errors="coerce"
             ).dt.time
 
+        with engine.connect() as conn:
+            chunk.to_sql(
+                "prf",
+                con=conn,
+                schema="bronze",
+                if_exists="append",
+                index=False,
+                method="multi"
+            )
 
-    with engine.connect() as conn:
-        chunk.to_sql(
-            "prf",
-            con=conn,
-            schema="bronze",
-            if_exists="append",
-            index=False,
-            method="multi"
-        )
+        print(f"Chunk {i} inserido com sucesso ({len(chunk)} linhas).")
 
-    print(f"Chunk {i} inserido com sucesso ({len(chunk)} linhas).")
+    print(f"Arquivo {os.path.basename(csv_file)} importado com sucesso.")
 
 print("Importação concluída!")
