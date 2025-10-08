@@ -36,21 +36,21 @@ for csv_file in csv_files:
             encoding="latin1",
             chunksize=chunksize,
             dtype=str
-        )): print(f"Arquivo {os.path.basename(csv_file)} importado com sucesso.")
+        )):
+        # Conversões de tipos
+        if "pesid" in chunk.columns:
+            chunk["pesid"] = pd.to_numeric(chunk["pesid"], errors="coerce")
+        if "idade" in chunk.columns:
+            chunk["idade"] = pd.to_numeric(chunk["idade"], errors="coerce")
+        if "ano_fabricacao_veiculo" in chunk.columns:
+            chunk["ano_fabricacao_veiculo"] = pd.to_numeric(chunk["ano_fabricacao_veiculo"], errors="coerce")
+        if "data_inversa" in chunk.columns:
+            chunk["data_inversa"] = pd.to_datetime(chunk["data_inversa"], errors="coerce").dt.date
+        if "horario" in chunk.columns:
+            chunk["horario"] = pd.to_datetime(
+                chunk["horario"], format="%H:%M:%S", errors="coerce"
+            ).dt.time
 
-    # Conversões de tipos
-    if "pesid" in chunk.columns:
-        chunk["pesid"] = pd.to_numeric(chunk["pesid"], errors="coerce")
-    if "idade" in chunk.columns:
-        chunk["idade"] = pd.to_numeric(chunk["idade"], errors="coerce")
-    if "ano_fabricacao_veiculo" in chunk.columns:
-        chunk["ano_fabricacao_veiculo"] = pd.to_numeric(chunk["ano_fabricacao_veiculo"], errors="coerce")
-    if "data_inversa" in chunk.columns:
-        chunk["data_inversa"] = pd.to_datetime(chunk["data_inversa"], errors="coerce").dt.date
-    if "horario" in chunk.columns:
-        chunk["horario"] = pd.to_datetime(
-            chunk["horario"], format="%H:%M:%S", errors="coerce"
-        ).dt.time
 
     with engine.connect() as conn:
         chunk.to_sql(
