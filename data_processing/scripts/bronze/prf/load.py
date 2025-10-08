@@ -2,6 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
+import glob
 
 load_dotenv()
 
@@ -13,17 +14,29 @@ DB = os.getenv("DB")
 
 engine = create_engine(f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}", future=True)
 
-csv_file = "../../dataset/acidentes2025_todas_causas_tipos.csv"
+DATASET_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../dataset/prf"))
+csv_files = sorted(glob.glob(os.path.join(DATASET_DIR, "*.csv")))
+
+if not csv_files:
+    print(f"Nenhum arquivo CSV encontrado em {DATASET_DIR}")
+    exit(1)
+
+print(f"{len(csv_files)} arquivos encontrados em {DATASET_DIR}:")
+for f in csv_files:
+    print(f"  - {os.path.basename(f)}")
 
 chunksize = 100_000  
 
-for i, chunk in enumerate(pd.read_csv(
-        csv_file,
-        sep=";",  
-        encoding="latin1", 
-        chunksize=chunksize,
-        dtype=str 
-    )):
+for csv_file in csv_files:
+    print(f"\n Iniciando importação de: {os.path.basename(csv_file)}")
+
+    for i, chunk in enumerate(pd.read_csv(
+            csv_file,
+            sep=";",  
+            encoding="latin1",
+            chunksize=chunksize,
+            dtype=str
+        )): print(f"Arquivo {os.path.basename(csv_file)} importado com sucesso.")
 
     # Conversões de tipos
     if "pesid" in chunk.columns:
