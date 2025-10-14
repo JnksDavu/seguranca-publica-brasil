@@ -3,4 +3,3 @@ env
 data_processing/dataset/sinesp
 data_processing/dataset/prf
 data_processing/dataset/ibge
-data_processing/venv
