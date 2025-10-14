@@ -51,6 +51,6 @@ for f in xlsx_files:
             chunksize=10_000
         )
 
-    print(f"Arquivo {os.path.basename(xlsx_files)} importado com sucesso.")
+    print(f"Arquivo {os.path.basename(f)} importado com sucesso.")
 
 print("Importação concluída!")
