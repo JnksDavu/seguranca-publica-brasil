@@ -1,27 +1,36 @@
+#!/usr/bin/env bash
 set -e
 
-PROJECT_DIR=$(dirname "$0") 
-VENV_DIR="$PROJECT_DIR/venv"
-PYTHON_SCRIPT_PATH="$PROJECT_DIR/data_processing/scripts/bronze/prf/load.py"
-REQUIREMENTS_PATH="$PROJECT_DIR/data_processing/requirements.txt"
+# Caminho base do projeto (pasta onde o script está)
+PROJECT_DIR="$(dirname "$(realpath "$0")")"
 
-cd "$PROJECT_DIR"
+# Caminho do venv três pastas acima
+VENV_DIR="$(realpath "$PROJECT_DIR/../../../venv")"
+
+# Caminhos dos scripts e requirements
+PYTHON_SCRIPT_PATH="$PROJECT_DIR/load.py"
+REQUIREMENTS_PATH="$(realpath "$PROJECT_DIR/../../../requirements.txt")"
 
 echo "Iniciando pipeline de dados..."
+echo "Diretório do projeto: $PROJECT_DIR"
+echo "Diretório do ambiente virtual: $VENV_DIR"
 
-# --- Lógica do Ambiente Virtual ---
+# --- Criação do ambiente virtual ---
 if [ ! -d "$VENV_DIR" ]; then
     echo "Ambiente virtual '$VENV_DIR' não encontrado. Criando..."
     python3 -m venv "$VENV_DIR"
-    echo "Ambiente criado. Instalando dependências de '$REQUIREMENTS_PATH'..."
-    
-    # Ativa o venv temporariamente para instalar as dependências
+
+    # Garante que o pip esteja atualizado
     source "$VENV_DIR/bin/activate"
+    python -m pip install --upgrade pip wheel setuptools
     pip install -r "$REQUIREMENTS_PATH"
     deactivate
-    echo "Dependências instaladas."
+    echo "Ambiente virtual criado e dependências instaladas."
 else
-    echo "Ambiente virtual já existente."
+    echo "Ambiente virtual já existente. Verificando dependências..."
+    source "$VENV_DIR/bin/activate"
+    pip install -r "$REQUIREMENTS_PATH" --upgrade --quiet
+    deactivate
 fi
 
 # --- Execução do Script Python ---
@@ -34,3 +43,4 @@ python "$PYTHON_SCRIPT_PATH" "$@"
 deactivate
 
 echo "Execução do pipeline finalizada com sucesso!"
+
