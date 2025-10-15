@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
+import { Rodovias } from './components/Rodovias';
 
 
 export default function App() {
@@ -10,6 +11,8 @@ export default function App() {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
+      case 'rodovias':
+        return <Rodovias />;
     }
   };
 

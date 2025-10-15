@@ -98,22 +98,6 @@ export function Rodovias() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex items-center space-x-3 mb-2">
-          <motion.div
-            animate={{ 
-              x: [0, 10, 0],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <Car className="h-8 w-8 text-blue-600" />
-          </motion.div>
-          <h2 className="text-blue-900">Acidentes em Rodovias</h2>
-        </div>
-        <p className="text-blue-600">Dados da Polícia Rodoviária Federal (PRF)</p>
       </motion.div>
 
       {/* Filters */}
