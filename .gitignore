@@ -4,3 +4,5 @@ data_processing/dataset/sinesp
 data_processing/dataset/prf
 data_processing/dataset/ibge
 data_processing/venv
+client/node_modules
+client/package-lock.json
