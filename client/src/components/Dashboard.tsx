@@ -79,15 +79,6 @@ export function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h2 className="text-blue-900 mb-2">Dashboard Principal</h2>
-        <p className="text-blue-600">Visão geral integrada dos dados de segurança pública</p>
-      </motion.div>
 
       {/* Filters */}
       <motion.div
