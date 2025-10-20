@@ -54,7 +54,11 @@
       outDir: 'build',
     },
     server: {
+      host: true,
       port: 3000,
-      open: true,
+      allowedHosts: [
+       'seguranca-publica-brasil.com',
+       'www.seguranca-publica-brasil.com'
+      ]
     },
   });
