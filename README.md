@@ -2,13 +2,13 @@
 
 ![Estrutura - Portfólio (TCC) (1)](https://github.com/user-attachments/assets/b5384686-b2ce-4b62-ab14-5280e21f88b6)
 
-* **Título do Projeto**: CrimiMap - Plataforma de Análise Integrada da Segurança Pública
+* **Título do Projeto**: Segurança Pública Brasil - Plataforma de Análise Integrada da Segurança Pública
 * **Nome do Estudante**: Davi Andrzejewski Junkes
 * **Curso**: Engenharia de Software
 
 # Resumo
 
-Este documento apresenta o projeto "CrimiMap", uma plataforma web destinada à centralização e visualização de dados públicos sobre segurança no Brasil. O objetivo é padronizar e disponibilizar informações de diferentes fontes governamentais, oferecendo uma interface interativa com mapas de calor, filtros e estatísticas para apoiar cidadãos, pesquisadores e gestores públicos.
+Este documento apresenta o projeto "Segurança Pública Brasil", uma plataforma web destinada à centralização e visualização de dados públicos sobre segurança no Brasil. O objetivo é padronizar e disponibilizar informações de diferentes fontes governamentais, oferecendo uma interface interativa com mapas de calor, filtros e estatísticas para apoiar cidadãos, pesquisadores e gestores públicos.
 
 ## 1. Introdução
 
@@ -131,3 +131,10 @@ Desenvolvimento de um sistema web que centraliza dados públicos de órgãos com
 **Considerações Professor/a:**
 
 ---
+
+
+
+## Deploy
+
+
+- Para deploy será utilizado o NGINX na VM oracle always free (Pegar config da maquina), ver o que é o certbot, juntamente como dominio comprado e hospedado na hostinger.
