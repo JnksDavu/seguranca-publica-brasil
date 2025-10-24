@@ -1,0 +1,280 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "url": "={{ $json.downloadUrl }}",
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          848,
+          0
+        ],
+        "id": "85b56866-fa65-40df-beb1-b99791fb2746",
+        "name": "Download arquivos",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = [];\n\n  items.push({\n    json: {\n      year: $('Edit Fields').first().json.year,\n      downloadUrl: `https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/download/dnsp-base-de-dados/bancovde-${$('Edit Fields').first().json.year}.xlsx/@@download/file`,\n      fileName: `sinesp_vde_${$('Edit Fields').first().json.year}.xlsx`\n    }\n  });\n\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          592,
+          0
+        ],
+        "id": "d67a1e5d-c204-414d-95d3-6d32be7cd1ea",
+        "name": "format html",
+        "alwaysOutputData": false,
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "=/home/tcc/seguranca-publica-brasil/data_processing/dataset/sinesp/{{ $json.fileName }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          0
+        ],
+        "id": "7f2b588c-3128-4199-8b90-679fc5c6c5d3",
+        "name": "Read/Write Files from Disk",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "url": "https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          368,
+          0
+        ],
+        "id": "f786a371-5713-4952-968e-c9c0cb13243c",
+        "name": "HTTP Request",
+        "alwaysOutputData": false,
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "JE0L31OvjMn4uotv",
+            "mode": "list",
+            "cachedResultName": "[Load] Sinesp"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1328,
+          0
+        ],
+        "id": "ee5307cb-32b2-434e-939f-5919ad669b13",
+        "name": "Execute Workflow"
+      },
+      {
+        "parameters": {
+          "fromEmail": "daviandre.junkes@gmail.com",
+          "toEmail": "daviandre.junkes@gmail.com",
+          "subject": "[Sinesp] Extract bronze erro",
+          "html": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Erro no Workflow</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; padding: 20px;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px;\">\n    <h2 style=\"color: #d93025;\">⚠️ Erro no Workflow do n8n</h2>\n\n    <p>Ocorreu um erro durante a execução do workflow <strong>{{ $workflow.name }}</strong>.</p>\n\n    <p><strong>Nó:</strong>Carga incremental<br>\n    <strong>ID da Execução:</strong> {{ $execution.id }}<br>\n    <strong>Data:</strong> {{ new Date().toLocaleString(\"pt-BR\") }}</p>\n\n<strong>Error:</strong> {{ $json.error }}</p>\n\n\n    <p>Confira a execução completa no painel do n8n para mais detalhes.</p>\n\n    <p style=\"font-size: 12px; color: #777;\">— Alerta automático do n8n</p>\n  </div>\n</body>\n</html>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          736,
+          272
+        ],
+        "id": "590e89ae-4c23-4f19-8d36-94c5e41a5ecc",
+        "name": "Send email URL",
+        "webhookId": "7e44f73a-0d87-489e-9fe5-d1fd02216e11",
+        "credentials": {
+          "smtp": {
+            "id": "b5INjS3EGNjj8hSL",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "daviandre.junkes@gmail.com",
+          "toEmail": "daviandre.junkes@gmail.com",
+          "subject": "[Sinesp] Extract bronze erro",
+          "html": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Erro no Workflow</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; padding: 20px;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px;\">\n    <h2 style=\"color: #d93025;\">⚠️ Erro no Workflow do n8n</h2>\n\n    <p>Ocorreu um erro durante a execução do workflow <strong>{{ $workflow.name }}</strong>.</p>\n\n    <p><strong>Nó:</strong>Carga incremental<br>\n    <strong>ID da Execução:</strong> {{ $execution.id }}<br>\n    <strong>Data:</strong> {{ new Date().toLocaleString(\"pt-BR\") }}</p>\n\n<strong>Error:</strong> {{ $json.error }}</p>\n\n\n    <p>Confira a execução completa no painel do n8n para mais detalhes.</p>\n\n    <p style=\"font-size: 12px; color: #777;\">— Alerta automático do n8n</p>\n  </div>\n</body>\n</html>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1296,
+          288
+        ],
+        "id": "488c87a3-313f-430c-bd9d-4b71833a64c1",
+        "name": "Send email DOWNLOAD",
+        "webhookId": "7e44f73a-0d87-489e-9fe5-d1fd02216e11",
+        "credentials": {
+          "smtp": {
+            "id": "b5INjS3EGNjj8hSL",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 3
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -80,
+          0
+        ],
+        "id": "134ef676-ce02-414f-9ca5-c7200f4047e2",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"year\": 2025\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          144,
+          0
+        ],
+        "id": "3633335e-dd23-42e6-83cc-d41a8c795929",
+        "name": "Edit Fields"
+      }
+    ],
+    "connections": {
+      "Download arquivos": {
+        "main": [
+          [
+            {
+              "node": "Read/Write Files from Disk",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send email DOWNLOAD",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "format html": {
+        "main": [
+          [
+            {
+              "node": "Download arquivos",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send email URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read/Write Files from Disk": {
+        "main": [
+          [
+            {
+              "node": "Execute Workflow",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send email DOWNLOAD",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "format html",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send email URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "instanceId": "e92f2361bd07573c228e4844e3164cbdc0c2b32e29d0c5b3dda39eb7e99e5cdd"
+    }
+  }

@@ -1,0 +1,124 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -304,
+          -96
+        ],
+        "id": "f3e4ca09-e61e-4e25-b01f-7774fc28c4e8",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "delete \nfrom bronze.sinesp\nwhere data_referencia between ('2025-01-01') and ('2025-12-31')",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          -112,
+          -96
+        ],
+        "id": "17f138b8-048c-4394-9842-14acc4781cd4",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "postgres": {
+            "id": "thI5NpfQnk4etdhH",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "command": "bash /home/tcc/seguranca-publica-brasil/data_processing/scripts/bronze/sinesp/run_pipeline.bash"
+        },
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          112,
+          -96
+        ],
+        "id": "2bb1b6a7-adc2-467f-a0e1-f2df87c8a853",
+        "name": "Execute Command",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "fromEmail": "daviandre.junkes@gmail.com",
+          "toEmail": "daviandre.junkes@gmail.com",
+          "subject": "[Sinesp] Load bronze erro",
+          "html": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Erro no Workflow</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; padding: 20px;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px;\">\n    <h2 style=\"color: #d93025;\">⚠️ Erro no Workflow do n8n</h2>\n\n    <p>Ocorreu um erro durante a execução do workflow <strong>{{ $workflow.name }}</strong>.</p>\n\n    <p><strong>Nó:</strong>Carga incremental<br>\n    <strong>ID da Execução:</strong> {{ $execution.id }}<br>\n    <strong>Data:</strong> {{ new Date().toLocaleString(\"pt-BR\") }}</p>\n\n<strong>Error:</strong> {{ $json.error }}</p>\n\n\n    <p>Confira a execução completa no painel do n8n para mais detalhes.</p>\n\n    <p style=\"font-size: 12px; color: #777;\">— Alerta automático do n8n</p>\n  </div>\n</body>\n</html>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          352,
+          112
+        ],
+        "id": "e08d54a6-adc6-4068-b482-b42fd695062c",
+        "name": "Send email incremental",
+        "webhookId": "7e44f73a-0d87-489e-9fe5-d1fd02216e11",
+        "credentials": {
+          "smtp": {
+            "id": "b5INjS3EGNjj8hSL",
+            "name": "SMTP account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Execute Command",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send email incremental",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Command": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Send email incremental",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "instanceId": "e92f2361bd07573c228e4844e3164cbdc0c2b32e29d0c5b3dda39eb7e99e5cdd"
+    }
+  }
