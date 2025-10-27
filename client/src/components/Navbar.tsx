@@ -26,7 +26,7 @@ export function Navbar({ currentPage, onPageChange }: NavbarProps) {
             onClick={() => onPageChange('dashboard')}
           >
             <motion.img
-              src="../../public/logo_seguranca_brasil.png"
+              src="../../logo_seguranca_brasil.png"
               alt="Logo"
               style={{ height: '5rem' }}
               transition={{ duration: 0.6 }}
