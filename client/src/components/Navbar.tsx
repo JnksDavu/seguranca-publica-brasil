@@ -26,11 +26,12 @@ export function Navbar({ currentPage, onPageChange }: NavbarProps) {
             onClick={() => onPageChange('dashboard')}
           >
             <motion.img
-              src="../../logo_seguranca_brasil.png"
+              src="/logo_seguranca_brasil.png"
               alt="Logo"
               style={{ height: '5rem' }}
               transition={{ duration: 0.6 }}
             />
+
             <div>
               <h1 className="text-blue-900">Segurança Pública Brasil</h1>
             </div>
