@@ -4,7 +4,7 @@ PROJECT_DIR="$(dirname "$(realpath "$0")")"
 
 VENV_DIR="$(realpath "$PROJECT_DIR/../../../venv")"
 
-MODULE="sinesp"
+MODULE="ibge"
 PYTHON_SCRIPT_PATH="scripts.bronze."$MODULE".load"
 REQUIREMENTS_PATH="$(realpath "$PROJECT_DIR/../../../requirements.txt")"
 

@@ -7,9 +7,9 @@ from sqlalchemy import text
 engine = get_engine()
 
 DDL = """
-delete from bronze.ibge_populacao_renda;
+delete from bronze.ibge_populacao;
 
-CREATE TABLE IF NOT EXISTS bronze.ibge_populacao_renda (
+CREATE TABLE IF NOT EXISTS bronze.ibge_populacao (
     ano INT,
     cod_municipio VARCHAR(10),
     municipio VARCHAR(150),
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS bronze.ibge_populacao_renda (
     populacao_total BIGINT
 );
 
-ALTER TABLE bronze.ibge_populacao_renda
+ALTER TABLE bronze.ibge_populacao
     ADD COLUMN IF NOT EXISTS ano INT,
     ADD COLUMN IF NOT EXISTS cod_municipio VARCHAR(10),
     ADD COLUMN IF NOT EXISTS municipio VARCHAR(150),
