@@ -4,6 +4,8 @@ import time
 import random
 from scripts.db import get_engine
 from sqlalchemy import text
+from dotenv import load_dotenv
+import os
 
 engine = get_engine()
 
@@ -32,7 +34,7 @@ with engine.connect() as conn:
     conn.commit()
 
 # Token de autenticação (Bearer)
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZmQxMmYzNC1lYjliLTQ1MjgtYTFjMi1jOGI0MmUwYjZkYzYiLCJlbWFpbCI6ImRhdmlhbmRyZS5qdW5rZXNAZ21haWwuY29tIiwic3RyaXBlU3Vic2NyaXB0aW9uSWQiOiJzdWJfMVNQNDhDQ1N2SXMwOHRJRTRsdWp4eDc1IiwiaWF0IjoxNzYyMTAwODc4fQ.FgQroq71jpmv481l5n3bRWZqzAlI5m35TC3qfbNQAXI"
+TOKEN = os.getenv("token_fipe")
 
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}"
