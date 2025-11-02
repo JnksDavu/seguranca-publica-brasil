@@ -163,7 +163,7 @@ def save_to_db(df: pd.DataFrame):
         return
     with engine.connect() as conn:
         df.to_sql(
-            "ibge_populacao_renda",
+            "ibge_populacao",
             con=conn,
             schema="bronze",
             if_exists="append",
@@ -171,7 +171,7 @@ def save_to_db(df: pd.DataFrame):
             method="multi",
             chunksize=5000,
         )
-    print(f"[INFO] Inseridos {len(df)} registros em bronze.ibge_populacao_renda")
+    print(f"[INFO] Inseridos {len(df)} registros em bronze.ibge_populacao")
 
 if __name__ == "__main__":
     df = build_with_fallback()
