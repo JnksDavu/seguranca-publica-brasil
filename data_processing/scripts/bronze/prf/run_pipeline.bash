@@ -33,7 +33,7 @@ echo "Ativando ambiente virtual para execução..."
 source "$VENV_DIR/bin/activate"
 
 echo "Executando script Python: $PYTHON_SCRIPT_PATH"
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR/data_processing"
 python -m "$PYTHON_SCRIPT_PATH" "$@"
 
 deactivate
