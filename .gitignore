@@ -9,6 +9,6 @@ client/package-lock.json
 server/node_modules
 server/package-lock.json
 cliente/build
-*__pycache__*/
+__pycache__/
 *.csv
 *.xlsx
