@@ -41,6 +41,17 @@ UF_NOME = {
     "51": "Mato Grosso", "52": "Goiás", "53": "Distrito Federal"
 }
 
+UF_ABREV = {
+    "11": "RO", "12": "AC", "13": "AM", "14": "RR",
+    "15": "PA", "16": "AP", "17": "TO", "21": "MA",
+    "22": "PI", "23": "CE", "24": "RN", "25": "PB",
+    "26": "PE", "27": "AL", "28": "SE", "29": "BA",
+    "31": "MG", "32": "ES", "33": "RJ",
+    "35": "SP", "41": "PR", "42": "SC",
+    "43": "RS", "50": "MS",
+    "51": "MT", "52": "GO", "53": "DF"
+}
+
 SUFIXO_UF_REGEX = re.compile(r"\s*-\s*[A-Z]{2}$")
 
 def sanitize_municipio(nome: str) -> str:
@@ -75,6 +86,7 @@ def fetch_estimada_municipio(anos):
             "municipio": nome_mun,
             "cod_uf": cod_uf,
             "uf": UF_NOME.get(cod_uf),
+            "uf_abrev": UF_ABREV.get(cod_uf),
             "populacao_total": pop
         })
     df = pd.DataFrame(rows)
@@ -104,6 +116,7 @@ def fetch_censo_2022():
             "municipio": nome_mun,
             "cod_uf": cod_uf,
             "uf": UF_NOME.get(cod_uf),
+            "uf_abrev": UF_ABREV.get(cod_uf),
             "populacao_total": pop
         })
     df = pd.DataFrame(rows)
