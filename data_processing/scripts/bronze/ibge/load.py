@@ -142,7 +142,7 @@ def build_with_fallback():
     df_22 = fetch_censo_2022()
 
     # Índices para juntar por município
-    df_22_key = df_22[["cod_municipio","municipio","cod_uf","uf","populacao_total"]].rename(
+    df_22_key = df_22[["cod_municipio","municipio","cod_uf","uf","uf_abrev","populacao_total"]].rename(
         columns={"populacao_total":"pop_2022"}
     )
     df_24 = df_24_25[df_24_25["ano"]==2024][["cod_municipio","populacao_total"]].rename(
@@ -159,7 +159,7 @@ def build_with_fallback():
 
     base["pop_2023"] = base.apply(calc_2023, axis=1)
 
-    df_2023 = base[["cod_municipio","municipio","cod_uf","uf","pop_2023"]].rename(
+    df_2023 = base[["cod_municipio","municipio","cod_uf","uf","uf_abrev","pop_2023"]].rename(
         columns={"pop_2023":"populacao_total"}
     )
     df_2023["ano"] = 2023
@@ -169,7 +169,7 @@ def build_with_fallback():
     df["cod_municipio"] = df["cod_municipio"].astype(str)
     df["cod_uf"] = df["cod_uf"].astype(str)
 
-    df = df[["ano","cod_municipio","municipio","cod_uf","uf","populacao_total"]].drop_duplicates()
+    df = df[["ano","cod_municipio","municipio","cod_uf","uf","uf_abrev","populacao_total"]].drop_duplicates()
     return df
 
 def save_to_db(df: pd.DataFrame):
@@ -190,7 +190,7 @@ def save_to_db(df: pd.DataFrame):
 
 if __name__ == "__main__":
     df = build_with_fallback()
-    df = df[["ano","cod_municipio","municipio","cod_uf","uf","populacao_total"]].drop_duplicates()
+    df = df[["ano","cod_municipio","municipio","cod_uf","uf","uf_abrev","populacao_total"]].drop_duplicates()
     df = df.sort_values(["ano","cod_municipio"])
     save_to_db(df)
     print("✅ Extração e carga concluídas (2023 interpolado se ausente; 2024–2025 oficiais).")
