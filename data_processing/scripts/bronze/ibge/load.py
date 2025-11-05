@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS bronze.ibge_populacao (
     municipio VARCHAR(150),
     cod_uf VARCHAR(2),
     uf VARCHAR(100),
+    uf_abrev VARCHAR(2),
     populacao_total BIGINT
 );
 
@@ -24,6 +25,7 @@ ALTER TABLE bronze.ibge_populacao
     ADD COLUMN IF NOT EXISTS municipio VARCHAR(150),
     ADD COLUMN IF NOT EXISTS cod_uf VARCHAR(2),
     ADD COLUMN IF NOT EXISTS uf VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS uf_abrev VARCHAR(2),
     ADD COLUMN IF NOT EXISTS populacao_total BIGINT;
 """
 with engine.connect() as conn:
