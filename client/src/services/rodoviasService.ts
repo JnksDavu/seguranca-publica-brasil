@@ -10,18 +10,19 @@ export interface Rodovia {
   nome_dia_semana: string;
   flag_fim_de_semana: boolean;
   municipio: string;
-  uf: string;
+  uf_abrev: string;
   tipo_acidente: string;
   causa_acidente: string;
   categoria_acidente: string;
 }
 
 export interface RodoviasFilters {
-  ano?: number;
+  ano?: string | number;
   uf?: string;
   categoria_acidente?: string;
   municipio?: string;
   mes?: string;
+  semana?: string;
   nome_dia_semana?: string;
   flag_fim_de_semana?: string;
   data_inicio?: string;

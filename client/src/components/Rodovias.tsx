@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { fetchRodovias, Rodovia } from '../services/rodoviasService';
+import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, TrendingDown, TrendingUp, Navigation, X } from 'lucide-react';
+import { Car, AlertCircle, TrendingDown, TrendingUp, Navigation, X, Calendar, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Select from 'react-select'; // multi-select
+import Select from 'react-select';
 
 export function Rodovias() {
-  // ==========================
-  // Estados de filtro
-  // ==========================
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string[]>([]);
@@ -27,25 +25,21 @@ export function Rodovias() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ==========================
-  // Opções fixas (mock)
-  // ==========================
-  const monthOptions = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'].map(m => ({ value: m, label: m }));
-  const yearOptions = ['2022', '2023', '2024', '2025'].map(y => ({ value: y, label: y }));
-  const dayOfWeekOptions = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(d => ({ value: d, label: d }));
-  const weekendOptions = [
-    { value: 'true', label: 'Sim' },
-    { value: 'false', label: 'Não' },
-  ];
-  const ufOptions = ['SC', 'PR', 'SP', 'MG', 'RJ', 'RS'].map(u => ({ value: u, label: u }));
-  const municipioOptions = ['Florianópolis', 'Curitiba', 'São Paulo', 'Belo Horizonte', 'Rio de Janeiro', 'Porto Alegre'].map(m => ({ value: m, label: m }));
-  const tipoOptions = ['Colisão', 'Capotamento', 'Atropelamento'].map(t => ({ value: t, label: t }));
-  const causaOptions = ['Falta de atenção', 'Alta velocidade', 'Chuva', 'Ultrapassagem indevida'].map(c => ({ value: c, label: c }));
-  const categoriaOptions = ['Grave', 'Leve', 'Fatais'].map(c => ({ value: c, label: c }));
+  const [monthOptions, setMonthOptions] = useState<{value:string;label:string}[]>([]);
+  const [yearOptions, setYearOptions] = useState<{value:string;label:string}[]>([]);
+  const [dayOfWeekOptions, setDayOfWeekOptions] = useState<{value:string;label:string}[]>([]);
+  const [weekendOptions, setWeekendOptions] = useState<{value:string;label:string}[]>([{ value: 'true', label: 'Sim' },{ value: 'false', label: 'Não' }]);
+  const [ufOptions, setUfOptions] = useState<{value:string;label:string}[]>([]);
+  const [municipioOptions, setMunicipioOptions] = useState<{value:string;label:string}[]>([]);
+  const [tipoOptions, setTipoOptions] = useState<{value:string;label:string}[]>([]);
+  const [causaOptions, setCausaOptions] = useState<{value:string;label:string}[]>([]);
+  const [categoriaOptions, setCategoriaOptions] = useState<{value:string;label:string}[]>([]);
 
-  // ==========================
-  // Buscar dados conforme filtros
-  // ==========================
+
+  const selectStyles = {
+    menuList: (base: any) => ({ ...base, maxHeight: 36 * 5 }), 
+  };
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -74,9 +68,58 @@ export function Rodovias() {
     selectedUF, selectedMunicipio, selectedTipoAcidente, selectedCausaAcidente, selectedCategoriaAcidente
   ]);
 
-  // ==========================
-  // Resetar filtros
-  // ==========================
+  useEffect(() => {
+    (async () => {
+      try {
+        const calendario = await getCalendario();
+        const monthsSet = new Set();
+        const yearsSet = new Set();
+        const daysSet = new Set();
+        (calendario || []).forEach((c: any) => {
+          if (c && c.nome_mes) monthsSet.add(String(c.nome_mes));
+          if (c && c.ano !== undefined && c.ano !== null) yearsSet.add(String(c.ano));
+          if (c && c.nome_dia_semana) daysSet.add(String(c.nome_dia_semana));
+        });
+        const months = Array.from(monthsSet).map((m: any) => ({ value: String(m), label: String(m) }));
+        const years = Array.from(yearsSet).map((y: any) => String(y)).sort().reverse().map((y: any) => ({ value: String(y), label: String(y) }));
+        const days = Array.from(daysSet).map((d: any) => ({ value: String(d), label: String(d) }));
+        setMonthOptions(months);
+        setYearOptions(years);
+        setDayOfWeekOptions(days);
+
+        const local = await getLocalidade();
+        const ufsSet = new Set();
+        const municipiosSet = new Set();
+        (local || []).forEach((l: any) => {
+          if (l && l.uf_abrev) ufsSet.add(String(l.uf_abrev));
+          if (l && l.municipio) municipiosSet.add(String(l.municipio));
+        });
+        const ufs = Array.from(ufsSet).map((u: any) => ({ value: String(u), label: String(u) }));
+        const municipios = Array.from(municipiosSet).map((m: any) => ({ value: String(m), label: String(m) }));
+        setUfOptions(ufs);
+        setMunicipioOptions(municipios);
+
+        const tipos = await getTipoAcidente();
+        const tipoSet = new Set();
+        const causaSet = new Set();
+        const categoriaSet = new Set();
+        (tipos || []).forEach((t: any) => {
+          if (t && t.tipo_acidente) tipoSet.add(String(t.tipo_acidente));
+          if (t && t.causa_acidente) causaSet.add(String(t.causa_acidente));
+          if (t && t.categoria_acidente) categoriaSet.add(String(t.categoria_acidente));
+        });
+        const tipoList = Array.from(tipoSet).map((t: any) => ({ value: String(t), label: String(t) }));
+        const causaList = Array.from(causaSet).map((c: any) => ({ value: String(c), label: String(c) }));
+        const categoriaList = Array.from(categoriaSet).map((c: any) => ({ value: String(c), label: String(c) }));
+        setTipoOptions(tipoList);
+        setCausaOptions(causaList);
+        setCategoriaOptions(categoriaList);
+      } catch (err) {
+        console.error('Erro ao carregar dimensões', err);
+      }
+    })();
+  }, []);
+
   const clearFilters = () => {
     setDateStart('');
     setDateEnd('');
@@ -91,9 +134,6 @@ export function Rodovias() {
     setSelectedCategoriaAcidente([]);
   };
 
-  // ==========================
-  // Dados mockados (cards e gráficos)
-  // ==========================
   const statsCards = [
     { title: 'Total de Acidentes', value: '8.942', change: '-8.3%', trend: 'down', icon: AlertCircle, color: 'text-orange-600', bgColor: 'bg-orange-50' },
     { title: 'Vítimas Fatais', value: '1.234', change: '-12.1%', trend: 'down', icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-50' },
@@ -113,73 +153,209 @@ export function Rodovias() {
     { cause: 'Ultrapassagem Indevida', value: 987 },
   ];
 
-  // ==========================
-  // Render
-  // ==========================
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Filtros de Tempo */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-wrap gap-4 mb-4 items-center bg-white rounded-lg shadow p-4 border border-blue-200"
+        className="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-xl shadow-sm border border-blue-100"
       >
-        <div className="flex flex-col">
-          <label className="text-blue-700 text-xs mb-1">Data Início</label>
-          <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="border border-blue-300 rounded px-2 py-1 text-blue-900" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-blue-700 text-xs mb-1">Data Fim</label>
-          <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="border border-blue-300 rounded px-2 py-1 text-blue-900" />
-        </div>
-        <div className="w-[150px]">
-          <label className="text-blue-700 text-xs mb-1">Mês</label>
-          <Select isMulti options={monthOptions} value={monthOptions.filter(o => selectedMonth.includes(o.value))} onChange={(v) => setSelectedMonth(v.map(x => x.value))} />
-        </div>
-        <div className="w-[120px]">
-          <label className="text-blue-700 text-xs mb-1">Ano</label>
-          <Select isMulti options={yearOptions} value={yearOptions.filter(o => selectedYear.includes(o.value))} onChange={(v) => setSelectedYear(v.map(x => x.value))} />
-        </div>
-        <div className="w-[160px]">
-          <label className="text-blue-700 text-xs mb-1">Dia da Semana</label>
-          <Select isMulti options={dayOfWeekOptions} value={dayOfWeekOptions.filter(o => selectedDayOfWeek.includes(o.value))} onChange={(v) => setSelectedDayOfWeek(v.map(x => x.value))} />
-        </div>
-        <div className="w-[140px]">
-          <label className="text-blue-700 text-xs mb-1">Final de Semana</label>
-          <Select isMulti options={weekendOptions} value={weekendOptions.filter(o => selectedWeekend.includes(o.value))} onChange={(v) => setSelectedWeekend(v.map(x => x.value))} />
-        </div>
-        <button onClick={clearFilters} className="ml-auto flex items-center text-blue-800 border border-blue-300 px-3 py-1 rounded hover:bg-blue-50">
-          <X className="h-4 w-4 mr-1" /> Limpar Filtros
-        </button>
+        {[
+          { icon: Calendar, type: 'date', value: dateStart, set: setDateStart, placeholder: 'Data Início', width: 180 },
+          { icon: Calendar, type: 'date', value: dateEnd, set: setDateEnd, placeholder: 'Data Fim', width: 180 },
+        ].map((f, i) => (
+          <div
+            key={i}
+            className="flex items-center bg-blue-50 rounded-lg px-3 py-2 shadow-sm mr-3"
+            style={{ width: f.width }}
+          >
+            <f.icon className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+            <input
+              type={f.type}
+              value={f.value}
+              onChange={(e) => f.set(e.target.value)}
+              className="border-none bg-transparent outline-none text-blue-900 text-sm w-full h-[34px]" // mesma altura
+              title={f.value}
+            />
+            {f.value && (
+              <button
+                type="button"
+                onClick={() => f.set('')}
+                className="text-gray-400 hover:text-gray-700 ml-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        {[
+          { icon: Calendar, state: selectedMonth, set: setSelectedMonth, options: monthOptions, placeholder: 'Mês', width: 270 },
+          { icon: Calendar, state: selectedYear, set: setSelectedYear, options: yearOptions, placeholder: 'Ano', width: 200 },
+          { icon: Calendar, state: selectedDayOfWeek, set: setSelectedDayOfWeek, options: dayOfWeekOptions, placeholder: 'Dia Semana', width: 275 },
+        ].map((f, i) => (
+          <div
+            key={i}
+            className="flex items-center bg-blue-50 rounded-lg px-3 py-2 shadow-sm group relative mr-3"
+            style={{ width: f.width }}
+          >
+            <f.icon className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+            <div className="truncate text-ellipsis">
+              <Select
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: '34px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    boxShadow: 'none',
+                    width: f.width - 40, 
+                  }),
+                  container: (base) => ({
+                    ...base,
+                    width: f.width - 40,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    width: f.width - 40,
+                  }),
+                  menuList: (base) => ({
+                    ...base,
+                    maxHeight: 36 * 5,
+                  }),
+                }}
+                isMulti
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                options={f.options}
+                value={f.options.filter((o) => f.state.includes(o.value))}
+                onChange={(v: any) => f.set((v || []).map((x: any) => x.value))}
+                placeholder={f.placeholder}
+              />
+            </div>
+
+            {f.state.length > 0 && (
+              <button
+                type="button"
+                onClick={() => f.set([])}
+                className="text-gray-400 hover:text-gray-700 ml-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
       </motion.div>
 
-      {/* Filtros de Localização e Tipo */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="flex flex-wrap gap-4 mb-8 items-center bg-white rounded-lg shadow p-4 border border-blue-200"
+        className="flex flex-wrap gap-4 mb-8 items-center bg-white p-4 rounded-xl shadow-sm border border-blue-100"
       >
-        <div className="w-[120px]">
-          <label className="text-blue-700 text-xs mb-1">UF</label>
-          <Select isMulti options={ufOptions} value={ufOptions.filter(o => selectedUF.includes(o.value))} onChange={(v) => setSelectedUF(v.map(x => x.value))} />
-        </div>
-        <div className="w-[200px]">
-          <label className="text-blue-700 text-xs mb-1">Município</label>
-          <Select isMulti options={municipioOptions} value={municipioOptions.filter(o => selectedMunicipio.includes(o.value))} onChange={(v) => setSelectedMunicipio(v.map(x => x.value))} />
-        </div>
-        <div className="w-[200px]">
-          <label className="text-blue-700 text-xs mb-1">Tipo de Acidente</label>
-          <Select isMulti options={tipoOptions} value={tipoOptions.filter(o => selectedTipoAcidente.includes(o.value))} onChange={(v) => setSelectedTipoAcidente(v.map(x => x.value))} />
-        </div>
-        <div className="w-[200px]">
-          <label className="text-blue-700 text-xs mb-1">Causa</label>
-          <Select isMulti options={causaOptions} value={causaOptions.filter(o => selectedCausaAcidente.includes(o.value))} onChange={(v) => setSelectedCausaAcidente(v.map(x => x.value))} />
-        </div>
-        <div className="w-[200px]">
-          <label className="text-blue-700 text-xs mb-1">Categoria</label>
-          <Select isMulti options={categoriaOptions} value={categoriaOptions.filter(o => selectedCategoriaAcidente.includes(o.value))} onChange={(v) => setSelectedCategoriaAcidente(v.map(x => x.value))} />
+        {[
+          {
+            icon: MapPin,
+            state: selectedUF,
+            set: setSelectedUF,
+            options: ufOptions,
+            placeholder: 'UF',
+            width: '10%',
+          },
+          {
+            icon: MapPin,
+            state: selectedMunicipio,
+            set: setSelectedMunicipio,
+            options: municipioOptions,
+            placeholder: 'Município',
+            width: 520,
+          },
+          {
+            icon: Car,
+            state: selectedTipoAcidente,
+            set: setSelectedTipoAcidente,
+            options: tipoOptions,
+            placeholder: 'Tipo',
+            width: 500,
+          },
+          {
+            icon: AlertCircle,
+            state: selectedCausaAcidente,
+            set: setSelectedCausaAcidente,
+            options: causaOptions,
+            placeholder: 'Causa',
+            width: 550,
+          },
+          {
+            icon: AlertCircle,
+            state: selectedCategoriaAcidente,
+            set: setSelectedCategoriaAcidente,
+            options: categoriaOptions,
+            placeholder: 'Categoria',
+            width: 450,
+          },
+        ].map((f, i) => (
+          <div
+            key={i}
+            className="flex items-center bg-blue-50 rounded-lg px-3 py-2 shadow-sm group relative mr-3"
+            style={{ width: f.width }}
+          >
+            <f.icon className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+
+            <div className="truncate text-ellipsis" title={f.state.join(', ') || f.placeholder}>
+              <Select
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: '34px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    boxShadow: 'none',
+                    width: f.width - 40, 
+                  }),
+                  container: (base) => ({
+                    ...base,
+                    width: f.width - 40, 
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    width: f.width - 40,
+                  }),
+                  menuList: (base) => ({
+                    ...base,
+                    maxHeight: 36 * 5,
+                  }),
+                }}
+                isMulti
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                options={f.options}
+                value={f.options.filter((o) => f.state.includes(o.value))}
+                onChange={(v: any) => f.set((v || []).map((x: any) => x.value))}
+                placeholder={f.placeholder}
+              />
+            </div>
+
+            {f.state.length > 0 && (
+              <button
+                type="button"
+                onClick={() => f.set([])}
+                className="text-gray-400 hover:text-gray-700 ml-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        <div className="ml-auto">
+          <button
+            onClick={clearFilters}
+            className="flex items-center bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-200 transition shadow-sm"
+          >
+            <X className="h-4 w-4 mr-1" /> Limpar Filtros
+          </button>
         </div>
       </motion.div>
 
@@ -281,7 +457,7 @@ export function Rodovias() {
                         <TableCell>{item.nome_mes}</TableCell>
                         <TableCell>{item.nome_dia_semana}</TableCell>
                         <TableCell>{item.municipio}</TableCell>
-                        <TableCell>{item.uf}</TableCell>
+                        <TableCell>{(item as any).uf_abrev || (item as any).uf}</TableCell>
                         <TableCell>{item.tipo_acidente}</TableCell>
                         <TableCell>{item.categoria_acidente}</TableCell>
                         <TableCell>{item.causa_acidente}</TableCell>

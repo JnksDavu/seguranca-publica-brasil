@@ -1,18 +1,17 @@
 const db = require('../config/db');
 
 const getRodovias = async (req, res) => {
+  // Mapeamento de filtros para colunas
   const filterMap = {
-    ano: "c.ano",
-    uf: "l.uf",
-    categoria_acidente: "ta.categoria_acidente",
-    municipio: "l.municipio",
-    mes: "c.nome_mes",
-    nome_dia_semana: "c.nome_dia_semana",
-    flag_fim_de_semana: "c.flag_fim_de_semana",
-    tipo_acidente: "ta.tipo_acidente",
-    causa_acidente: "ta.causa_acidente",
-    data_inicio: "c.data_completa >= $PARAM",
-    data_fim: "c.data_completa <= $PARAM"
+    ano: 'c.ano',
+    uf: 'l.uf_abrev',
+    categoria_acidente: 'ta.categoria_acidente',
+    municipio: 'l.municipio',
+    mes: 'c.nome_mes',
+    nome_dia_semana: 'c.nome_dia_semana',
+    flag_fim_de_semana: 'c.flag_fim_de_semana',
+    tipo_acidente: 'ta.tipo_acidente',
+    causa_acidente: 'ta.causa_acidente',
   };
 
   const filters = req.query;
@@ -20,17 +19,42 @@ const getRodovias = async (req, res) => {
   const queryParams = [];
   let paramIndex = 1;
 
-  for (const [key, value] of Object.entries(filters)) {
+  // suporta valores únicos ou CSV (ex: uf=SC,PR)
+  for (const [key, rawValue] of Object.entries(filters)) {
+    if (rawValue === undefined || rawValue === '') continue;
+    // datas tratadas separadamente
+    if (key === 'data_inicio' || key === 'data_fim') continue;
+
     const column = filterMap[key];
-    if (column && value !== undefined && value !== "") {
-      if (key === "data_inicio" || key === "data_fim") {
-        whereClauses.push(column.replace("$PARAM", `$${paramIndex}`));
-      } else {
-        whereClauses.push(`${column} = $${paramIndex}`);
-      }
+    if (!column) continue;
+
+    const value = String(rawValue);
+    if (value.includes(',')) {
+      const parts = value.split(',').map(p => p.trim()).filter(p => p.length > 0);
+      if (parts.length === 0) continue;
+      const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
+      whereClauses.push(`${column} IN (${placeholders})`);
+      queryParams.push(...parts);
+    } else {
+      whereClauses.push(`${column} = $${paramIndex}`);
       queryParams.push(value);
       paramIndex++;
     }
+  }
+
+  // Range de datas
+  if (filters.data_inicio && filters.data_fim) {
+    whereClauses.push(`c.data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    queryParams.push(filters.data_inicio, filters.data_fim);
+    paramIndex += 2;
+  } else if (filters.data_inicio) {
+    whereClauses.push(`c.data_completa >= $${paramIndex}`);
+    queryParams.push(filters.data_inicio);
+    paramIndex++;
+  } else if (filters.data_fim) {
+    whereClauses.push(`c.data_completa <= $${paramIndex}`);
+    queryParams.push(filters.data_fim);
+    paramIndex++;
   }
 
   let baseQuery = `
@@ -44,7 +68,7 @@ const getRodovias = async (req, res) => {
       c.nome_dia_semana,
       c.flag_fim_de_semana,
       l.municipio,
-      l.uf,
+      l.uf_abrev,
       ta.tipo_acidente,
       ta.causa_acidente,
       ta.categoria_acidente
@@ -75,7 +99,7 @@ const getRodoviaById = async (req, res) => {
     SELECT
       f.total_mortos, f.total_feridos_graves, f.total_veiculos,
       c.data_completa, c.ano, c.nome_mes, c.nome_dia_semana,
-      l.municipio, l.uf,
+      l.municipio, l.uf_abrev,
       ta.tipo_acidente, ta.causa_acidente, ta.categoria_acidente,
       f.id_acidente_bronze
     FROM Silver.fato_rodovias AS f
