@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchRodovias, Rodovia } from '../services/rodoviasService';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, TrendingDown, TrendingUp, Navigation, X, Calendar, MapPin } from 'lucide-react';
+import { Car, AlertCircle, TrendingDown, TrendingUp, Navigation, X, Calendar, MapPin,FileText,BarChart2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -24,6 +24,13 @@ export function Rodovias() {
   const [rodovias, setRodovias] = useState<Rodovia[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // view mode: 'graficos' shows charts + small table; 'relatorio' shows the big paginated report
+  const [viewMode, setViewMode] = useState<'graficos' | 'relatorio'>('graficos');
+
+  // pagination for the report (tabelão)
+  const [pageSize, setPageSize] = useState<number>(100);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [monthOptions, setMonthOptions] = useState<{value:string;label:string}[]>([]);
   const [yearOptions, setYearOptions] = useState<{value:string;label:string}[]>([]);
@@ -132,6 +139,52 @@ export function Rodovias() {
     setSelectedTipoAcidente([]);
     setSelectedCausaAcidente([]);
     setSelectedCategoriaAcidente([]);
+  };
+
+  // pagination helpers for the report view
+  const totalPages = Math.max(1, Math.ceil(rodovias.length / pageSize));
+  const pagedData = rodovias.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleChangePageSize = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
+
+  const exportCsv = (rows: Rodovia[]) => {
+    if (!rows || rows.length === 0) return;
+    const headers = ['Data','Ano','Mês','Dia Semana','Município','UF','Tipo','Categoria','Causa','Mortos','Feridos','Veículos'];
+    const csvRows = [headers.join(',')];
+    rows.forEach((item) => {
+      const cols = [
+        `"${item.data_completa ?? ''}"`,
+        `"${item.ano ?? ''}"`,
+        `"${item.nome_mes ?? ''}"`,
+        `"${item.nome_dia_semana ?? ''}"`,
+        `"${item.municipio ?? ''}"`,
+        `"${(item as any).uf_abrev || (item as any).uf || ''}"`,
+        `"${item.tipo_acidente ?? ''}"`,
+        `"${item.categoria_acidente ?? ''}"`,
+        `"${item.causa_acidente ?? ''}"`,
+        `"${item.total_mortos ?? ''}"`,
+        `"${item.total_feridos_graves ?? ''}"`,
+        `"${item.total_veiculos ?? ''}"`,
+      ];
+      csvRows.push(cols.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `relatorio_rodovias_${new Date().toISOString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const statsCards = [
@@ -359,8 +412,37 @@ export function Rodovias() {
         </div>
       </motion.div>
 
-      {/* Cards mockados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center bg-white px-4 py-2 rounded-xl border border-blue-100 shadow-sm gap-4">
+          <button
+            onClick={() => setViewMode('graficos')}
+            className={`flex items-center gap-2 px-6 py-6 rounded-md text-base transition ${
+              viewMode === 'graficos'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            <BarChart2 className="w-5 h-5" />
+            Gráficos
+          </button>
+
+          <button
+            onClick={() => setViewMode('relatorio')}
+            className={`flex items-center gap-2 px-6 py-6 rounded-md text-base transition ${
+              viewMode === 'relatorio'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            Relatório
+          </button>
+        </div>
+      </div>
+
+      
+      {viewMode === 'graficos' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statsCards.map((stat, i) => {
           const Icon = stat.icon;
           const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
@@ -383,10 +465,12 @@ export function Rodovias() {
             </motion.div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Gráficos mockados */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {viewMode === 'graficos' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card className="border-blue-100 shadow-lg">
           <CardHeader><CardTitle className="text-blue-900">Evolução Mensal</CardTitle></CardHeader>
           <CardContent>
@@ -414,10 +498,12 @@ export function Rodovias() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
 
       {/* Tabela dinâmica */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      {viewMode === 'graficos' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="border-blue-100 shadow-lg">
           <CardHeader>
             <CardTitle className="text-blue-900">Acidentes em Rodovias (Dados Reais)</CardTitle>
@@ -472,7 +558,100 @@ export function Rodovias() {
             )}
           </CardContent>
         </Card>
-      </motion.div>
+        </motion.div>
+      )}
+
+      {/* Relatório (tabelão) */}
+      {viewMode === 'relatorio' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-blue-100 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Relatório Completo - Rodovias</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-blue-700">Linhas por página:</label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => handleChangePageSize(Number(e.target.value))}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                    <option value={300}>300</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => exportCsv(pagedData)}
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                  >
+                    Exportar
+                  </button>
+                </div>
+              </div>
+
+              {/* Top pagination controls */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-gray-600">Página {currentPage} de {totalPages} — {rodovias.length} registros filtrados</div>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Ano</TableHead>
+                    <TableHead>Mês</TableHead>
+                    <TableHead>Dia Semana</TableHead>
+                    <TableHead>Município</TableHead>
+                    <TableHead>UF</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Causa</TableHead>
+                    <TableHead>Mortos</TableHead>
+                    <TableHead>Feridos</TableHead>
+                    <TableHead>Veículos</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pagedData.length === 0 ? (
+                    <TableRow><TableCell colSpan={12} className="text-center text-gray-500">Nenhum dado encontrado</TableCell></TableRow>
+                  ) : (
+                    pagedData.map((item, i) => (
+                      <TableRow key={i} className="hover:bg-blue-50">
+                        <TableCell>{item.data_completa}</TableCell>
+                        <TableCell>{item.ano}</TableCell>
+                        <TableCell>{item.nome_mes}</TableCell>
+                        <TableCell>{item.nome_dia_semana}</TableCell>
+                        <TableCell>{item.municipio}</TableCell>
+                        <TableCell>{(item as any).uf_abrev || (item as any).uf}</TableCell>
+                        <TableCell>{item.tipo_acidente}</TableCell>
+                        <TableCell>{item.categoria_acidente}</TableCell>
+                        <TableCell>{item.causa_acidente}</TableCell>
+                        <TableCell>{item.total_mortos}</TableCell>
+                        <TableCell>{item.total_feridos_graves}</TableCell>
+                        <TableCell>{item.total_veiculos}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Bottom pagination controls */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-gray-600">Página {currentPage} de {totalPages}</div>
+                <div className="flex items-center gap-2">
+                  <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Anterior</button>
+                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Próximo</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </div>
   );
 }
