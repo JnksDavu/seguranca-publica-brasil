@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { fetchRodovias, Rodovia } from '../services/rodoviasService';
+import { fetchIndicadores, IndicadoresResponse } from '../services/indicadoresService';
+import { useDebounce } from '../hooks/useDebounce';
+import { StatCard } from './StatCard';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, TrendingDown, TrendingUp, Navigation, X, Calendar, MapPin,FileText,BarChart2, Info } from 'lucide-react';
+import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -30,6 +33,10 @@ export function Rodovias() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Indicadores state
+  const [indicadores, setIndicadores] = useState<IndicadoresResponse | null>(null);
+  const [indicadoresLoading, setIndicadoresLoading] = useState(false);
+
   // view mode: 'graficos' shows charts + small table; 'relatorio' shows the big paginated report
   const [viewMode, setViewMode] = useState<'graficos' | 'relatorio'>('graficos');
 
@@ -53,11 +60,58 @@ export function Rodovias() {
   const [causaOptions, setCausaOptions] = useState<{value:string;label:string}[]>([]);
   const [categoriaOptions, setCategoriaOptions] = useState<{value:string;label:string}[]>([]);
 
+  // Estado consolidado dos filtros para debounce
+  const [filtersState, setFiltersState] = useState({
+    dateStart,
+    dateEnd,
+    selectedMonth,
+    selectedYear,
+    selectedDayOfWeek,
+    selectedWeekend,
+    selectedUF,
+    selectedMunicipio,
+    selectedTipoAcidente,
+    selectedCausaAcidente,
+    selectedCategoriaAcidente,
+  });
+
+  // Debounce dos filtros
+  const debouncedFilters = useDebounce(filtersState, 500);
+
+  // Atualizar estado consolidado quando qualquer filtro muda
+  useEffect(() => {
+    setFiltersState({
+      dateStart,
+      dateEnd,
+      selectedMonth,
+      selectedYear,
+      selectedDayOfWeek,
+      selectedWeekend,
+      selectedUF,
+      selectedMunicipio,
+      selectedTipoAcidente,
+      selectedCausaAcidente,
+      selectedCategoriaAcidente,
+    });
+  }, [
+    dateStart,
+    dateEnd,
+    selectedMonth,
+    selectedYear,
+    selectedDayOfWeek,
+    selectedWeekend,
+    selectedUF,
+    selectedMunicipio,
+    selectedTipoAcidente,
+    selectedCausaAcidente,
+    selectedCategoriaAcidente,
+  ]);
 
   const selectStyles = {
     menuList: (base: any) => ({ ...base, maxHeight: 36 * 5 }), 
   };
 
+  // Fetch rodovias quando filtros debouncados mudam
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -68,17 +122,17 @@ export function Rodovias() {
       setTotalCount(0);
       setLastServerPageFetched(0);
       const filters = {
-        data_inicio: dateStart || undefined,
-        data_fim: dateEnd || undefined,
-        mes: (selectedMonth as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-        ano: (selectedYear as (string | { value: string })[]).map(y => typeof y === 'string' ? y : y.value).join(',') || undefined,
-        nome_dia_semana: (selectedDayOfWeek as (string | { value: string })[]).map(d => typeof d === 'string' ? d : d.value).join(',') || undefined,
-        flag_fim_de_semana: (selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
-        uf: (selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
-        municipio: (selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-        tipo_acidente: (selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
-        causa_acidente: (selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
-        categoria_acidente: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        data_inicio: debouncedFilters.dateStart || undefined,
+        data_fim: debouncedFilters.dateEnd || undefined,
+        mes: (debouncedFilters.selectedMonth as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        ano: (debouncedFilters.selectedYear as (string | { value: string })[]).map(y => typeof y === 'string' ? y : y.value).join(',') || undefined,
+        nome_dia_semana: (debouncedFilters.selectedDayOfWeek as (string | { value: string })[]).map(d => typeof d === 'string' ? d : d.value).join(',') || undefined,
+        flag_fim_de_semana: (debouncedFilters.selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
+        uf: (debouncedFilters.selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
+        municipio: (debouncedFilters.selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        tipo_acidente: (debouncedFilters.selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+        causa_acidente: (debouncedFilters.selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        categoria_acidente: (debouncedFilters.selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
       };
       try {
         const res = await fetchRodovias({ ...filters, page: 1, limit: serverChunkSize } as any);
@@ -94,12 +148,39 @@ export function Rodovias() {
       }
     })();
     return () => { cancelled = true; };
-  }, [
-    dateStart, dateEnd,
-    selectedMonth, selectedYear, selectedDayOfWeek, selectedWeekend,
-    selectedUF, selectedMunicipio, selectedTipoAcidente, selectedCausaAcidente, selectedCategoriaAcidente,
-    serverChunkSize,
-  ]);
+  }, [debouncedFilters, serverChunkSize]);
+
+  // Buscar indicadores agregados (com debounce)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIndicadoresLoading(true);
+      const filters = {
+        data_inicio: debouncedFilters.dateStart || undefined,
+        data_fim: debouncedFilters.dateEnd || undefined,
+        mes: (debouncedFilters.selectedMonth as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        ano: (debouncedFilters.selectedYear as (string | { value: string })[]).map(y => typeof y === 'string' ? y : y.value).join(',') || undefined,
+        nome_dia_semana: (debouncedFilters.selectedDayOfWeek as (string | { value: string })[]).map(d => typeof d === 'string' ? d : d.value).join(',') || undefined,
+        flag_fim_de_semana: (debouncedFilters.selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
+        uf: (debouncedFilters.selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
+        municipio: (debouncedFilters.selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        tipo_acidente: (debouncedFilters.selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+        causa_acidente: (debouncedFilters.selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        categoria_acidente: (debouncedFilters.selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+      };
+      try {
+        const res = await fetchIndicadores(filters);
+        if (!cancelled) {
+          setIndicadores(res);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar indicadores', err);
+      } finally {
+        if (!cancelled) setIndicadoresLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [debouncedFilters]);
 
   useEffect(() => {
     (async () => {
@@ -392,23 +473,55 @@ export function Rodovias() {
   }, [exportMenuOpen]);
 
   const statsCards = [
-    { title: 'Total de Acidentes', value: '8.942', change: '-8.3%', trend: 'down', icon: AlertCircle, color: 'text-orange-600', bgColor: 'bg-orange-50' },
-    { title: 'Vítimas Fatais', value: '1.234', change: '-12.1%', trend: 'down', icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-50' },
-    { title: 'Feridos', value: '5.678', change: '-6.5%', trend: 'down', icon: Car, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-    { title: 'Rodovias Monitoradas', value: '327', change: '+5', trend: 'up', icon: Navigation, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    {
+      title: 'Total de Acidentes',
+      value: indicadores?.indicadores_gerais?.total_acidentes?.toLocaleString('pt-BR') || '0',
+      change: '-',
+      trend: 'down' as const,
+      icon: AlertCircle,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50'
+    },
+    {
+      title: 'Vítimas Fatais',
+      value: indicadores?.indicadores_gerais?.total_mortos?.toLocaleString('pt-BR') || '0',
+      change: '-',
+      trend: 'down' as const,
+      icon: AlertCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50'
+    },
+    {
+      title: 'Feridos',
+      value: indicadores?.indicadores_gerais?.total_feridos?.toLocaleString('pt-BR') || '0',
+      change: '-',
+      trend: 'down' as const,
+      icon: Car,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50'
+    },
+    {
+      title: 'Rodovias Monitoradas',
+      value: indicadores?.indicadores_gerais?.rodovias_monitoradas?.toLocaleString('pt-BR') || '0',
+      change: '-',
+      trend: 'up' as const,
+      icon: Navigation,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50'
+    },
   ];
 
-  const monthlyAccidents = [
-    { month: 'Jan', total: 842, fatal: 124, comFeridos: 456 },
-    { month: 'Fev', total: 798, fatal: 112, comFeridos: 423 },
-    { month: 'Mar', total: 912, fatal: 138, comFeridos: 498 },
-  ];
+  const monthlyAccidents = (indicadores?.acidentes_por_mes || []).map((item) => ({
+    month: item.nome_mes || '',
+    total: item.total || 0,
+    fatal: item.mortos || 0,
+    comFeridos: (item.total || 0) - (item.mortos || 0),
+  }));
 
-  const causeData = [
-    { cause: 'Excesso de Velocidade', value: 2847 },
-    { cause: 'Falta de Atenção', value: 2134 },
-    { cause: 'Ultrapassagem Indevida', value: 987 },
-  ];
+  const causeData = (indicadores?.acidentes_por_causa || []).slice(0, 10).map((item) => ({
+    cause: item.causa_acidente || '',
+    value: item.total || 0,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -647,33 +760,31 @@ export function Rodovias() {
       
       {viewMode === 'graficos' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statsCards.map((stat, i) => {
-          const Icon = stat.icon;
-          const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
-          return (
-            <motion.div key={stat.title} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}>
-              <Card className="border-blue-100 shadow-lg hover:shadow-xl transition">
-                <CardContent className="p-6">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-sm text-blue-700 mb-1">{stat.title}</p>
-                      <h3 className="text-blue-900">{stat.value}</h3>
-                      <div className={`flex items-center ${stat.trend === 'down' ? 'text-green-600' : 'text-red-600'}`}>
-                        <TrendIcon className="h-4 w-4" /><span className="ml-1 text-sm">{stat.change}</span>
-                      </div>
-                    </div>
-                    <div className={`${stat.bgColor} p-3 rounded-lg`}><Icon className={stat.color + ' h-6 w-6'} /></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+        {statsCards.map((stat, i) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <StatCard
+              title={stat.title}
+              value={stat.value}
+              change={stat.change}
+              trend={stat.trend as 'up' | 'down'}
+              icon={stat.icon}
+              color={stat.color}
+              bgColor={stat.bgColor}
+              loading={indicadoresLoading}
+            />
+          </motion.div>
+        ))}
         </div>
       )}
 
-      {/* Gráficos mockados */}
+      {/* Gráficos */}
       {viewMode === 'graficos' && (
+        <div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card className="border-blue-100 shadow-lg">
           <CardHeader><CardTitle className="text-blue-900">Evolução Mensal</CardTitle></CardHeader>
@@ -702,6 +813,58 @@ export function Rodovias() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card className="border-blue-100 shadow-lg">
+          <CardHeader><CardTitle className="text-blue-900">Acidentes por Tipo</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={indicadores?.acidentes_por_tipo || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="tipo_acidente" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-100 shadow-lg">
+          <CardHeader><CardTitle className="text-blue-900">Acidentes por Categoria</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={indicadores?.acidentes_por_categoria || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="categoria_acidente" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 mb-6">
+        <Card className="border-blue-100 shadow-lg">
+          <CardHeader><CardTitle className="text-blue-900">Distribuição por UF</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={indicadores?.acidentes_por_uf || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="uf_abrev" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="total" fill="#06b6d4" name="Total de Acidentes" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="mortos" fill="#ef4444" name="Mortos" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        </div>
         </div>
       )}
 

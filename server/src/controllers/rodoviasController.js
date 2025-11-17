@@ -503,4 +503,251 @@ const exportRodovias = async (req, res) => {
   }
 };
 
-module.exports = { getRodovias, getRodoviaById, exportRodovias };
+// Endpoint para indicadores agregados (cards + gráficos)
+const getIndicadores = async (req, res) => {
+  const filterMap = {
+    ano: 'c.ano',
+    uf: 'l.uf_abrev',
+    categoria_acidente: 'ta.categoria_acidente',
+    municipio: 'l.municipio',
+    mes: 'c.nome_mes',
+    nome_dia_semana: 'c.nome_dia_semana',
+    flag_fim_de_semana: 'c.flag_fim_de_semana',
+    tipo_acidente: 'ta.tipo_acidente',
+    causa_acidente: 'ta.causa_acidente',
+  };
+
+  const filters = req.query;
+  const whereClauses = [];
+  const queryParams = [];
+  let paramIndex = 1;
+
+  // Monta filtros dinâmicos (reutiliza lógica de getRodovias)
+  for (const [key, rawValue] of Object.entries(filters)) {
+    if (rawValue === undefined || rawValue === '') continue;
+    if (key === 'data_inicio' || key === 'data_fim') continue;
+
+    const column = filterMap[key];
+    if (!column) continue;
+
+    const value = String(rawValue);
+
+    if (value.includes(',')) {
+      const parts = value.split(',').map(p => p.trim()).filter(p => p.length > 0);
+      if (parts.length === 0) continue;
+
+      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+        const ilikeClauses = parts.map(() => `${column} ILIKE $${paramIndex++}`).join(' OR ');
+        whereClauses.push(`(${ilikeClauses})`);
+        queryParams.push(...parts);
+      } else {
+        const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
+        whereClauses.push(`${column} IN (${placeholders})`);
+        queryParams.push(...parts);
+      }
+    } else {
+      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+        whereClauses.push(`${column} ILIKE $${paramIndex}`);
+        queryParams.push(value);
+        paramIndex++;
+      } else {
+        whereClauses.push(`${column} = $${paramIndex}`);
+        queryParams.push(value);
+        paramIndex++;
+      }
+    }
+  }
+
+  // Filtro por intervalo de datas
+  if (filters.data_inicio && filters.data_fim) {
+    whereClauses.push(`c.data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    queryParams.push(filters.data_inicio, filters.data_fim);
+    paramIndex += 2;
+  } else if (filters.data_inicio) {
+    whereClauses.push(`c.data_completa >= $${paramIndex}`);
+    queryParams.push(filters.data_inicio);
+    paramIndex++;
+  } else if (filters.data_fim) {
+    whereClauses.push(`c.data_completa <= $${paramIndex}`);
+    queryParams.push(filters.data_fim);
+    paramIndex++;
+  }
+
+  const whereClause = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
+
+  try {
+    // Query agregada para indicadores gerais
+    const indicadoresQuery = `
+      SELECT
+        COUNT(DISTINCT f.id_acidente_bronze) AS total_acidentes,
+        SUM(f.total_mortos) AS total_mortos,
+        SUM(f.total_feridos) AS total_feridos,
+        SUM(f.total_feridos_graves) AS total_feridos_graves,
+        SUM(f.total_feridos_leves) AS total_feridos_leves,
+        COUNT(DISTINCT l.id_localidade) AS rodovias_monitoradas
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+    `;
+
+    // Query de acidentes por mês
+    const porMesQuery = `
+      SELECT
+        c.nome_mes,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total,
+        SUM(f.total_mortos) AS mortos
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY c.nome_mes
+      ORDER BY c.nome_mes
+    `;
+
+    // Query de acidentes por causa
+    const porCausaQuery = `
+      SELECT
+        ta.causa_acidente,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY ta.causa_acidente
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    // Query de acidentes por tipo
+    const porTipoQuery = `
+      SELECT
+        ta.tipo_acidente,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY ta.tipo_acidente
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    // Query de acidentes por categoria
+    const porCategoriaQuery = `
+      SELECT
+        ta.categoria_acidente,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY ta.categoria_acidente
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    // Query de acidentes por UF
+    const porUfQuery = `
+      SELECT
+        l.uf_abrev,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total,
+        SUM(f.total_mortos) AS mortos
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY l.uf_abrev
+      ORDER BY total DESC
+    `;
+
+    // Query de acidentes por dia da semana
+    const porDiaSemanaQuery = `
+      SELECT
+        c.nome_dia_semana,
+        COUNT(DISTINCT f.id_acidente_bronze) AS total
+      FROM silver.fato_rodovias f
+      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
+      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
+      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
+      ${whereClause}
+      GROUP BY c.nome_dia_semana
+      ORDER BY c.nome_dia_semana
+    `;
+
+    // Executa todas as queries em paralelo
+    const indicadorParam = req.query.indicador || 'all'; // 'all', 'gerais', 'mes', 'causa', 'tipo', 'categoria', 'uf', 'dia_semana'
+    
+    const queriesToExecute = {};
+    const queriesToFetch = [];
+
+    // Define quais queries executar baseado no parâmetro 'indicador'
+    if (indicadorParam === 'all' || indicadorParam === 'gerais') {
+      queriesToExecute.indicadores = db.query(indicadoresQuery, queryParams);
+      queriesToFetch.push('indicadores');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'mes') {
+      queriesToExecute.porMes = db.query(porMesQuery, queryParams);
+      queriesToFetch.push('porMes');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'causa') {
+      queriesToExecute.porCausa = db.query(porCausaQuery, queryParams);
+      queriesToFetch.push('porCausa');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'tipo') {
+      queriesToExecute.porTipo = db.query(porTipoQuery, queryParams);
+      queriesToFetch.push('porTipo');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'categoria') {
+      queriesToExecute.porCategoria = db.query(porCategoriaQuery, queryParams);
+      queriesToFetch.push('porCategoria');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'uf') {
+      queriesToExecute.porUf = db.query(porUfQuery, queryParams);
+      queriesToFetch.push('porUf');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'dia_semana') {
+      queriesToExecute.porDiaSemana = db.query(porDiaSemanaQuery, queryParams);
+      queriesToFetch.push('porDiaSemana');
+    }
+
+    // Executa apenas as queries necessárias
+    const resultados = await Promise.all(Object.values(queriesToExecute));
+    
+    const results = {};
+    queriesToFetch.forEach((key, index) => {
+      results[key] = resultados[index];
+    });
+
+    // Monta resposta consolidada
+    const response = {
+      indicadores_gerais: results.indicadores?.rows[0] || {
+        total_acidentes: 0,
+        total_mortos: 0,
+        total_feridos: 0,
+        total_feridos_graves: 0,
+        total_feridos_leves: 0,
+        rodovias_monitoradas: 0
+      },
+      acidentes_por_mes: results.porMes?.rows || [],
+      acidentes_por_causa: results.porCausa?.rows || [],
+      acidentes_por_tipo: results.porTipo?.rows || [],
+      acidentes_por_categoria: results.porCategoria?.rows || [],
+      acidentes_por_uf: results.porUf?.rows || [],
+      acidentes_por_dia_semana: results.porDiaSemana?.rows || []
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Erro ao consultar indicadores:', error);
+    res.status(500).json({ error: 'Erro ao consultar indicadores' });
+  }
+};
+
+module.exports = { getRodovias, getRodoviaById, exportRodovias, getIndicadores };
