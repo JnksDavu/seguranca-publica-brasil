@@ -59,7 +59,6 @@ export function Rodovias() {
   };
 
   useEffect(() => {
-    // initial load: fetch first server chunk (10k) and total count
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -71,15 +70,15 @@ export function Rodovias() {
       const filters = {
         data_inicio: dateStart || undefined,
         data_fim: dateEnd || undefined,
-        mes: selectedMonth.map(m => m).join(',') || undefined,
-        ano: selectedYear.map(y => y).join(',') || undefined,
-        nome_dia_semana: selectedDayOfWeek.map(d => d).join(',') || undefined,
-        flag_fim_de_semana: selectedWeekend.map(v => v).join(',') || undefined,
-        uf: selectedUF.map(u => u).join(',') || undefined,
-        municipio: selectedMunicipio.map(m => m).join(',') || undefined,
-        tipo_acidente: selectedTipoAcidente.map(t => t).join(',') || undefined,
-        causa_acidente: selectedCausaAcidente.map(c => c).join(',') || undefined,
-        categoria_acidente: selectedCategoriaAcidente.map(c => c).join(',') || undefined,
+        mes: (selectedMonth as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        ano: (selectedYear as (string | { value: string })[]).map(y => typeof y === 'string' ? y : y.value).join(',') || undefined,
+        nome_dia_semana: (selectedDayOfWeek as (string | { value: string })[]).map(d => typeof d === 'string' ? d : d.value).join(',') || undefined,
+        flag_fim_de_semana: (selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
+        uf: (selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
+        municipio: (selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+        tipo_acidente: (selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+        causa_acidente: (selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        categoria_acidente: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
       };
       try {
         const res = await fetchRodovias({ ...filters, page: 1, limit: serverChunkSize } as any);
@@ -236,15 +235,15 @@ export function Rodovias() {
   const buildFiltersForRequest = () => ({
     data_inicio: dateStart || undefined,
     data_fim: dateEnd || undefined,
-    mes: selectedMonth.map(m => m).join(',') || undefined,
-    ano: selectedYear.map(y => y).join(',') || undefined,
-    nome_dia_semana: selectedDayOfWeek.map(d => d).join(',') || undefined,
-    flag_fim_de_semana: selectedWeekend.map(v => v).join(',') || undefined,
-    uf: selectedUF.map(u => u).join(',') || undefined,
-    municipio: selectedMunicipio.map(m => m).join(',') || undefined,
-    tipo_acidente: selectedTipoAcidente.map(t => t).join(',') || undefined,
-    causa_acidente: selectedCausaAcidente.map(c => c).join(',') || undefined,
-    categoria_acidente: selectedCategoriaAcidente.map(c => c).join(',') || undefined,
+    mes: (selectedMonth as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+    ano: (selectedYear as (string | { value: string })[]).map(y => typeof y === 'string' ? y : y.value).join(',') || undefined,
+    nome_dia_semana: (selectedDayOfWeek as (string | { value: string })[]).map(d => typeof d === 'string' ? d : d.value).join(',') || undefined,
+    flag_fim_de_semana: (selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
+    uf: (selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
+    municipio: (selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
+    tipo_acidente: (selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+    causa_acidente: (selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+    categoria_acidente: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
   });
 
   // Fetch all pages from backend according to current filters. chunkSize controls how many rows per request.
@@ -787,37 +786,50 @@ export function Rodovias() {
                       <TableHead>Causa</TableHead>
                       <TableHead>Mortos</TableHead>
                       <TableHead>Feridos</TableHead>
-                      <TableHead>Veículos</TableHead>
+                      <TableHead>Feridos Graves</TableHead>
+                      <TableHead>Feridos Leves</TableHead>
+                      <TableHead>Tipo Veículo</TableHead>
+                      <TableHead>Modelo Veículo</TableHead>
+                      <TableHead>Marcas</TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {pagedData.length === 0 ? (
-                      <TableRow><TableCell colSpan={12} className="text-center text-gray-500">Nenhum dado encontrado</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={13} className="text-center text-gray-500">
+                          Nenhum dado encontrado
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       pagedData.map((item, i) => (
                         <TableRow key={i} className="hover:bg-blue-50">
                           <TableCell>{item.data_completa}</TableCell>
                           <TableCell>{item.nome_dia_semana}</TableCell>
                           <TableCell>{item.localidade}</TableCell>
+
                           <TableCell>{item.tipo_acidente}</TableCell>
                           <TableCell>{item.categoria_acidente}</TableCell>
                           <TableCell>{item.causa_acidente}</TableCell>
+
                           <TableCell>{item.total_mortos}</TableCell>
+                          <TableCell>{item.total_feridos}</TableCell>
                           <TableCell>{item.total_feridos_graves}</TableCell>
-                          <TableCell>{item.total_veiculos}</TableCell>
+                          <TableCell>{item.total_feridos_leves}</TableCell>
+
+                          <TableCell>{item.tipo_veiculo}</TableCell>
+                          <TableCell>{item.modelo_veiculo}</TableCell>
+                          <TableCell>{item.marcas}</TableCell>
                         </TableRow>
                       ))
                     )}
                   </TableBody>
                 </Table>
 
+
                 {loading && (
-                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70">
-                    <svg className="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                    </svg>
-                    <div className="mt-3 text-sm text-blue-700">Carregando dados...</div>
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70">
+                    <div className="text-sm text-blue-700">Carregando...</div>
                   </div>
                 )}
               </div>

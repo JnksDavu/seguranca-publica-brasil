@@ -1,21 +1,45 @@
 import api from "./api";
 
 export interface Rodovia {
+  id_acidente_bronze: number;
+
   total_mortos: number;
   total_feridos_graves: number;
+  total_feridos: number;
+  total_feridos_leves: number;
   total_veiculos: number;
+
   data_completa: string;
   ano: number;
   nome_mes: string;
   nome_dia_semana: string;
-  localidade: string;
   flag_fim_de_semana: boolean;
+
   municipio: string;
   uf_abrev: string;
-  tipo_acidente: string;
-  causa_acidente: string;
-  categoria_acidente: string;
+  localidade: string;
+
+  tipo_acidente: string;         
+  causa_acidente: string;        
+  categoria_acidente: string;    
+
+  modelo_veiculo: string;
+  tipo_veiculo: string;
+
+  marcas: string;               
+
+  idade: string;
+  sexo: string;
+  km: number;
+  br: string;
+  delegacia: string;
+  condicao_metereologica: string;
+  longitude: number;
+  latitude: number;
+  tipo_pista: string;
+  fase_dia: string;
 }
+
 
 export interface RodoviasFilters {
   ano?: string | number;
@@ -30,9 +54,22 @@ export interface RodoviasFilters {
   data_fim?: string;
   tipo_acidente?: string;
   causa_acidente?: string;
+  tipo_veiculo?: string;
+  modelo_veiculo?: string;
+  marcas?: string;     
+  idade?: string;
+  sexo?: string;
+  km?: number;
+  br?: string;
+  delegacia?: string;
+  condicao_metereologica?: string;
+  tipo_pista?: string;
+  fase_dia?: string;
+
   page?: number;
   limit?: number;
 }
+
 export async function fetchRodovias(filters: RodoviasFilters = {}): Promise<{ rows: Rodovia[]; total: number }> {
   // Ensure we don't send empty strings
   const params = Object.fromEntries(
