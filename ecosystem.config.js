@@ -45,12 +45,14 @@ module.exports = {
     // =======================================
     {
       name: "client",
-      script: "pm2",
-      args: "serve build 4173 --spa",
-      cwd: "client",
+      script: "/home/ubuntu/.nvm/versions/node/v20.19.4/lib/node_modules/pm2/lib/API/Serve.js",
+      args: "client/build 4173 --spa",
+      cwd: "/home/tcc/seguranca-publica-brasil",
       env: {
         NODE_ENV: "production"
       }
     }
+    
+    
   ]
 }
