@@ -425,7 +425,7 @@ export function Rodovias() {
     }
 
     // For JSON/XLSX we fallback to client-side fetch-and-export (may be heavy for very large datasets)
-    const chunkSize = 50000; // you can tune this
+    const chunkSize = 1000; // you can tune this
     try {
       const data = await fetchAllFiltered(chunkSize);
       const nameSuffix = `${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}_${data.length}`;
