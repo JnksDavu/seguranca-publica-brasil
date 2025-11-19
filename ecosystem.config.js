@@ -46,12 +46,13 @@ module.exports = {
     {
       name: "client",
       script: "/home/ubuntu/.nvm/versions/node/v20.19.4/lib/node_modules/pm2/lib/API/Serve.js",
-      args: "client/build 4173 --spa",
+      args: "4173 client/build --spa",
       cwd: "/home/tcc/seguranca-publica-brasil",
       env: {
         NODE_ENV: "production"
       }
     }
+    
     
     
   ]
