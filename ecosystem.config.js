@@ -46,8 +46,8 @@ module.exports = {
     {
       name: "client",
       script: "pm2",
-      args: "serve dist 4173 --spa",
-      cwd: "frontend",
+      args: "serve build 4173 --spa",
+      cwd: "client",
       env: {
         NODE_ENV: "production"
       }
