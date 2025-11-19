@@ -45,13 +45,14 @@ module.exports = {
     // =======================================
     {
       name: "client",
-      script: "/home/ubuntu/.nvm/versions/node/v20.19.4/lib/node_modules/pm2/lib/API/Serve.js",
-      args: "4173 client/build --spa",
-      cwd: "/home/tcc/seguranca-publica-brasil",
+      script: "http-server",
+      args: "build -p 4173 -P http://127.0.0.1:4173? -c-1",
+      cwd: "client",
       env: {
         NODE_ENV: "production"
       }
     }
+    
     
     
     
