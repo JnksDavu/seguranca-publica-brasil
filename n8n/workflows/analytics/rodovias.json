@@ -1,0 +1,82 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "command": "bash /home/tcc/seguranca-publica-brasil/data_processing/scripts/gold/rodovias/run_pipeline.bash"
+        },
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "8046b134-0d1b-4d50-89c4-fbd966bdb0e0",
+        "name": "Execute Command",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "fromEmail": "daviandre.junkes@gmail.com",
+          "toEmail": "daviandre.junkes@gmail.com",
+          "subject": "[analytics_rodovias] Load gold erro",
+          "html": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Erro no Workflow</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; padding: 20px;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px;\">\n    <h2 style=\"color: #d93025;\">⚠️ Erro no Workflow do n8n</h2>\n\n    <p>Ocorreu um erro durante a execução do workflow <strong>{{ $workflow.name }}</strong>.</p>\n\n    <p><strong>Nó:</strong>Carga incremental<br>\n    <strong>ID da Execução:</strong> {{ $execution.id }}<br>\n    <strong>Data:</strong> {{ new Date().toLocaleString(\"pt-BR\") }}</p>\n\n<strong>Error:</strong> {{ $json.error }}</p>\n\n\n    <p>Confira a execução completa no painel do n8n para mais detalhes.</p>\n\n    <p style=\"font-size: 12px; color: #777;\">— Alerta automático do n8n</p>\n  </div>\n</body>\n</html>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          464,
+          208
+        ],
+        "id": "4a503c83-a259-4354-8f1f-f7def824c857",
+        "name": "Send email incremental",
+        "webhookId": "7e44f73a-0d87-489e-9fe5-d1fd02216e11",
+        "credentials": {
+          "smtp": {
+            "id": "b5INjS3EGNjj8hSL",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "6a1f9734-c8c8-4aaf-8f65-12450b00552e",
+        "name": "When clicking ‘Execute workflow’"
+      }
+    ],
+    "connections": {
+      "Execute Command": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Send email incremental",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Execute Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "instanceId": "e92f2361bd07573c228e4844e3164cbdc0c2b32e29d0c5b3dda39eb7e99e5cdd"
+    }
+  }
