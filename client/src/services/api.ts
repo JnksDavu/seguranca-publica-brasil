@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const SYSTEM_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzeXN0ZW0iOnRydWUsImlhdCI6MTc2MzUyMzAwMiwiZXhwIjoxODQxMjgzMDAyfQ.6d6G3zE_I516k1StpMmZIAMGOmbSvVkg0DFGWjbQnqE";
+const token = import.meta.env.VITE_API_TOKEN;
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  headers: { 
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${SYSTEM_TOKEN}`
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   }
 });
 

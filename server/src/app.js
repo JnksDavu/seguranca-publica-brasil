@@ -8,13 +8,21 @@ const dimensoesRoutes = require('./routes/dimensoes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: [
+      "http://localhost:3000",
+      "https://seguranca-publica-brasil.com",
+      "https://www.seguranca-publica-brasil.com"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 
+// Rotas da API
 app.use(authMiddleware);
-
 app.use('/api/rodovias', rodoviasRoutes);
 app.use('/api/dimensoes', dimensoesRoutes);
 
