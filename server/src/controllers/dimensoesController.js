@@ -5,7 +5,8 @@ const getCalendario = async (req, res) => {
   let Query = `
     SELECT *
     from silver.dim_calendario
-    where ano > 2022
+    where ano > 2022 and ano <= EXTRACT(YEAR FROM CURRENT_DATE)
+    and 1 = 1
   `;
   try {
     const result = await db.query(Query);

@@ -1,53 +1,45 @@
 const db = require('../config/db');
 
 const getRodovias = async (req, res) => {
-  // Mapeia filtros recebidos para suas respectivas colunas no banco
   const filterMap = {
-    ano: 'c.ano',
-    uf: 'l.uf_abrev',
-    categoria_acidente: 'ta.categoria_acidente',
-    municipio: 'l.municipio',
-    mes: 'c.nome_mes',
-    nome_dia_semana: 'c.nome_dia_semana',
-    flag_fim_de_semana: 'c.flag_fim_de_semana',
-    tipo_acidente: 'ta.tipo_acidente',
-    causa_acidente: 'ta.causa_acidente',
+    ano: 'ano',
+    uf: 'uf_abrev',
+    categoria_acidente: 'categoria_acidente',
+    municipio: 'municipio',
+    mes: 'nome_mes',
+    nome_dia_semana: 'nome_dia_semana',
+    flag_fim_de_semana: 'flag_fim_de_semana',
+    tipo_acidente: 'tipo_acidente',
+    causa_acidente: 'causa_acidente',
   };
 
   const filters = req.query;
-  const whereClauses = [];   // Armazena condições dinâmicas
-  const queryParams = [];    // Armazena valores dos filtros
-  let paramIndex = 1;        // Controle dos placeholders ($1, $2...)
+  const whereClauses = [];
+  const queryParams = [];
+  let paramIndex = 1;
 
-  // Monta filtros dinâmicos com suporte a múltiplos valores
   for (const [key, rawValue] of Object.entries(filters)) {
-    if (rawValue === undefined || rawValue === '') continue;
-    if (key === 'data_inicio' || key === 'data_fim') continue;
-
+    if (!rawValue || key === 'data_inicio' || key === 'data_fim') continue;
     const column = filterMap[key];
     if (!column) continue;
 
     const value = String(rawValue);
 
-    // Suporte a filtros separados por vírgula
     if (value.includes(',')) {
-      const parts = value.split(',').map(p => p.trim()).filter(p => p.length > 0);
+      const parts = value.split(',').map(p => p.trim()).filter(Boolean);
       if (parts.length === 0) continue;
 
-      // Para colunas textuais, usa ILIKE (busca parcial)
-      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+      if (["uf", "municipio", "mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
         const ilikeClauses = parts.map(() => `${column} ILIKE $${paramIndex++}`).join(' OR ');
         whereClauses.push(`(${ilikeClauses})`);
         queryParams.push(...parts);
       } else {
-        // Para colunas não textuais, usa IN
         const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
         whereClauses.push(`${column} IN (${placeholders})`);
         queryParams.push(...parts);
       }
     } else {
-      // Filtro simples (ILIKE para textos e = para números)
-      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+      if (["uf", "municipio", "mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
         whereClauses.push(`${column} ILIKE $${paramIndex}`);
         queryParams.push(value);
         paramIndex++;
@@ -59,157 +51,46 @@ const getRodovias = async (req, res) => {
     }
   }
 
-  // Filtro por intervalo de datas
   if (filters.data_inicio && filters.data_fim) {
-    whereClauses.push(`c.data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    whereClauses.push(`data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
     queryParams.push(filters.data_inicio, filters.data_fim);
     paramIndex += 2;
   } else if (filters.data_inicio) {
-    whereClauses.push(`c.data_completa >= $${paramIndex}`);
+    whereClauses.push(`data_completa >= $${paramIndex}`);
     queryParams.push(filters.data_inicio);
     paramIndex++;
   } else if (filters.data_fim) {
-    whereClauses.push(`c.data_completa <= $${paramIndex}`);
+    whereClauses.push(`data_completa <= $${paramIndex}`);
     queryParams.push(filters.data_fim);
     paramIndex++;
   }
 
-  // Query principal com normalização e unificação das marcas de veículos
   let baseQuery = `
-  WITH marcas AS (
-    -- Carrega marcas normalizadas da tabela de veículos
-    SELECT DISTINCT marca_normalizada, UPPER(marca) AS marca
-    FROM silver.dim_veiculos
-  ),
-
-  fato_expandido AS (
-    -- Quebra lista de marcas em linhas individuais
-    SELECT
-      f.id_acidente_bronze,
-      trim(mn.marca_raw) AS marca_raw
-    FROM silver.fato_rodovias f
-    CROSS JOIN LATERAL unnest(string_to_array(f.marca_normalizada_prf, ', ')) AS mn(marca_raw)
-  ),
-
-  fato_validado AS (
-    -- Corrige variações de marcas (ex: "gm" => "chevrolet")
-    SELECT
-      fe.id_acidente_bronze,
-      CASE
-        WHEN marca_raw IN ('chev','gm') THEN 'chevrolet'
-        WHEN marca_raw IN ('mbenz','mercedes') THEN 'mercedesbenz'
-        WHEN marca_raw IN ('lr','lrover') THEN 'landrover'
-        WHEN marca_raw IN ('vw','volks') THEN 'volkswagen'
-        WHEN marca_raw = 'hyunda' THEN 'hyundai'
-        WHEN marca_raw = 'mmc' THEN 'mitsubishi'
-        WHEN marca_raw IN ('renalt','reanault','reanaut') THEN 'renault'
-        WHEN marca_raw = 'ivecofiat' THEN 'iveco'
-        WHEN marca_raw LIKE 'harleydavidson%' THEN 'harleydavidson'
-        WHEN marca_raw IN ('hd','hdavidson') THEN 'harleydavidson'
-        WHEN marca_raw LIKE 'mototraxx%' THEN 'traxx'
-        WHEN marca_raw = 'monark' THEN 'monark'
-        WHEN marca_raw = 'mvagusta' THEN 'mvagusta'
-        WHEN marca_raw = 'lavrale' THEN 'lavrale'
-        WHEN marca_raw = 'miura' THEN 'miura'
-        WHEN marca_raw = 'troller' THEN 'troller'
-        ELSE marca_raw
-      END AS marca_normalizada_corrigida
-    FROM fato_expandido fe
-  ),
-
-  marcas_unificadas AS (
-    -- Reagrupar marcas corrigidas em uma lista por acidente
-    SELECT
-      fv.id_acidente_bronze,
-      STRING_AGG(DISTINCT m.marca, ',') AS marcas_validadas
-    FROM fato_validado fv
-    LEFT JOIN marcas m ON m.marca_normalizada = fv.marca_normalizada_corrigida
-    GROUP BY fv.id_acidente_bronze
-  )
-
-  -- Seleção final com joins e dados agregados
-  SELECT
-    f.id_acidente_bronze,
-    f.total_mortos,
-    f.total_feridos,
-    f.total_feridos_graves,
-    f.total_feridos_leves,
-    f.total_veiculos,
-
-    to_char(c.data_completa, 'DD/MM/YYYY') AS data_completa,
-    c.ano,
-    c.nome_mes,
-    c.nome_dia_semana,
-    c.flag_fim_de_semana,
-
-    l.municipio,
-    l.uf_abrev,
-    l.localidade,
-
-    STRING_AGG(DISTINCT ta.tipo_acidente, ',') AS tipo_acidente,
-    STRING_AGG(DISTINCT ta.causa_acidente, ',') AS causa_acidente,
-    STRING_AGG(DISTINCT ta.categoria_acidente, ',') AS categoria_acidente,
-
-    f.modelo_veiculo,
-    f.tipo_veiculo,
-    mu.marcas_validadas AS marcas,
-
-    f.idade,
-    f.sexo,
-    f.km,
-    f.br,
-    f.delegacia,
-    f.condicao_metereologica,
-    f.longitude,
-    f.latitude,
-    f.tipo_pista,
-    f.fase_dia
-
-  FROM silver.fato_rodovias f
-  LEFT JOIN marcas_unificadas mu ON mu.id_acidente_bronze = f.id_acidente_bronze
-  LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-  LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-  LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-
-  ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
-
-  GROUP BY
-    f.id_acidente_bronze, f.total_mortos, f.total_feridos, f.total_feridos_graves,
-    f.total_feridos_leves, f.total_veiculos, f.modelo_veiculo, f.tipo_veiculo,
-    f.idade, f.sexo, f.km, f.br, f.delegacia, f.condicao_metereologica,
-    f.longitude, f.latitude, f.tipo_pista, f.fase_dia,
-    c.data_completa, c.ano, c.nome_mes, c.nome_dia_semana, c.flag_fim_de_semana,
-    l.municipio, l.uf_abrev, l.localidade, mu.marcas_validadas
-
-  ORDER BY c.data_completa DESC
+    SELECT *
+    FROM gold.analytics_rodovias
+    ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
   `;
 
   try {
-    // Query de contagem para paginação
     const countQuery = `
-      SELECT COUNT(*) AS total 
-      FROM Silver.fato_rodovias AS f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : ''}
+      SELECT COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
     `;
 
     const countResult = await db.query(countQuery, queryParams);
-    const total = countResult?.rows?.[0] ? parseInt(String(countResult.rows[0].total), 10) : 0;
+    const total = parseInt(countResult.rows[0].total || 0);
+    res.setHeader('X-Total-Count', String(total));
 
-    res.setHeader('X-Total-Count', String(total)); // Retorna total no header
+    const page = req.query.page ? parseInt(req.query.page, 10) : undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : undefined;
 
-    // Aplica paginação na query principal
-    const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
-    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
-
-    if (limit && Number.isFinite(limit) && limit > 0) {
+    if (limit && limit > 0) {
       baseQuery += ` LIMIT $${paramIndex}`;
       queryParams.push(limit);
       paramIndex++;
 
-      if (page && Number.isFinite(page) && page > 0) {
+      if (page && page > 0) {
         const offset = (page - 1) * limit;
         baseQuery += ` OFFSET $${paramIndex}`;
         queryParams.push(offset);
@@ -217,7 +98,6 @@ const getRodovias = async (req, res) => {
       }
     }
 
-    // Executa busca final
     const result = await db.query(baseQuery, queryParams);
     res.json(result.rows);
   } catch (error) {
@@ -230,18 +110,11 @@ const getRodovias = async (req, res) => {
 const getRodoviaById = async (req, res) => {
   const { id } = req.params;
   const query = `
-    SELECT
-      f.total_mortos, f.total_feridos_graves, f.total_veiculos,
-      c.data_completa, c.ano, c.nome_mes, c.nome_dia_semana,
-      l.municipio, l.uf_abrev,
-      ta.tipo_acidente, ta.causa_acidente, ta.categoria_acidente,
-      f.id_acidente_bronze
-    FROM Silver.fato_rodovias AS f
-    LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-    LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-    LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-    WHERE f.id_acidente_bronze = $1
+    SELECT *
+    FROM gold.analytics_rodovias
+    WHERE id_acidente_bronze = $1
   `;
+
   try {
     const result = await db.query(query, [id]);
     if (result.rows.length === 0) {
@@ -254,34 +127,34 @@ const getRodoviaById = async (req, res) => {
   }
 };
 
-// Export completo em CSV via streaming (paginação no servidor)
+
 const exportRodovias = async (req, res) => {
   const filterMap = {
-    ano: 'c.ano',
-    uf: 'l.uf_abrev',
-    categoria_acidente: 'ta.categoria_acidente',
-    municipio: 'l.municipio',
-    mes: 'c.nome_mes',
-    nome_dia_semana: 'c.nome_dia_semana',
-    flag_fim_de_semana: 'c.flag_fim_de_semana',
-    tipo_acidente: 'ta.tipo_acidente',
-    causa_acidente: 'ta.causa_acidente',
+    ano: 'ano',
+    uf: 'uf_abrev',
+    categoria_acidente: 'categoria_acidente',
+    municipio: 'municipio',
+    mes: 'nome_mes',
+    nome_dia_semana: 'nome_dia_semana',
+    flag_fim_de_semana: 'flag_fim_de_semana',
+    tipo_acidente: 'tipo_acidente',
+    causa_acidente: 'causa_acidente',
   };
 
-  const filters = Object.assign({}, req.query || {}, req.body || {});
+  const filters = { ...req.query, ...req.body };
   const whereClauses = [];
   const queryParams = [];
   let paramIndex = 1;
 
   for (const [key, rawValue] of Object.entries(filters)) {
-    if (rawValue === undefined || rawValue === '') continue;
-    if (key === 'data_inicio' || key === 'data_fim' || key === 'limit' || key === 'page') continue;
+    if (!rawValue || key === 'data_inicio' || key === 'data_fim' || key === 'limit' || key === 'page') continue;
+
     const column = filterMap[key];
     if (!column) continue;
+
     const value = String(rawValue);
     if (value.includes(',')) {
-      const parts = value.split(',').map(p => p.trim()).filter(p => p.length > 0);
-      if (parts.length === 0) continue;
+      const parts = value.split(',').map(p => p.trim()).filter(Boolean);
       const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
       whereClauses.push(`${column} IN (${placeholders})`);
       queryParams.push(...parts);
@@ -293,121 +166,24 @@ const exportRodovias = async (req, res) => {
   }
 
   if (filters.data_inicio && filters.data_fim) {
-    whereClauses.push(`c.data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    whereClauses.push(`data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
     queryParams.push(filters.data_inicio, filters.data_fim);
     paramIndex += 2;
   } else if (filters.data_inicio) {
-    whereClauses.push(`c.data_completa >= $${paramIndex}`);
+    whereClauses.push(`data_completa >= $${paramIndex}`);
     queryParams.push(filters.data_inicio);
     paramIndex++;
   } else if (filters.data_fim) {
-    whereClauses.push(`c.data_completa <= $${paramIndex}`);
+    whereClauses.push(`data_completa <= $${paramIndex}`);
     queryParams.push(filters.data_fim);
     paramIndex++;
   }
 
-  // Use the same query structure as getRodovias so exported rows match the on-screen table
-  let baseQuery = `
-  WITH marcas AS (
-    SELECT DISTINCT marca_normalizada, UPPER(marca) AS marca
-    FROM silver.dim_veiculos
-  ),
-
-  fato_expandido AS (
-    SELECT
-      f.id_acidente_bronze,
-      trim(mn.marca_raw) AS marca_raw
-    FROM silver.fato_rodovias f
-    CROSS JOIN LATERAL unnest(string_to_array(f.marca_normalizada_prf, ', ')) AS mn(marca_raw)
-  ),
-
-  fato_validado AS (
-    SELECT
-      fe.id_acidente_bronze,
-      CASE
-        WHEN marca_raw IN ('chev','gm') THEN 'chevrolet'
-        WHEN marca_raw IN ('mbenz','mercedes') THEN 'mercedesbenz'
-        WHEN marca_raw IN ('lr','lrover') THEN 'landrover'
-        WHEN marca_raw IN ('vw','volks') THEN 'volkswagen'
-        WHEN marca_raw = 'hyunda' THEN 'hyundai'
-        WHEN marca_raw = 'mmc' THEN 'mitsubishi'
-        WHEN marca_raw IN ('renalt','reanault','reanaut') THEN 'renault'
-        WHEN marca_raw = 'ivecofiat' THEN 'iveco'
-        WHEN marca_raw LIKE 'harleydavidson%' THEN 'harleydavidson'
-        WHEN marca_raw IN ('hd','hdavidson') THEN 'harleydavidson'
-        WHEN marca_raw LIKE 'mototraxx%' THEN 'traxx'
-        WHEN marca_raw = 'monark' THEN 'monark'
-        WHEN marca_raw = 'mvagusta' THEN 'mvagusta'
-        WHEN marca_raw = 'lavrale' THEN 'lavrale'
-        WHEN marca_raw = 'miura' THEN 'miura'
-        WHEN marca_raw = 'troller' THEN 'troller'
-        ELSE marca_raw
-      END AS marca_normalizada_corrigida
-    FROM fato_expandido fe
-  ),
-
-  marcas_unificadas AS (
-    SELECT
-      fv.id_acidente_bronze,
-      STRING_AGG(DISTINCT m.marca, ',') AS marcas_validadas
-    FROM fato_validado fv
-    LEFT JOIN marcas m ON m.marca_normalizada = fv.marca_normalizada_corrigida
-    GROUP BY fv.id_acidente_bronze
-  )
-
-  SELECT
-    f.id_acidente_bronze,
-    f.total_mortos,
-    f.total_feridos,
-    f.total_feridos_graves,
-    f.total_feridos_leves,
-    f.total_veiculos,
-
-    to_char(c.data_completa, 'DD/MM/YYYY') AS data_completa,
-    c.ano,
-    c.nome_mes,
-    c.nome_dia_semana,
-    c.flag_fim_de_semana,
-
-    l.municipio,
-    l.uf_abrev,
-    l.localidade,
-
-    STRING_AGG(DISTINCT ta.tipo_acidente, ',') AS tipo_acidente,
-    STRING_AGG(DISTINCT ta.causa_acidente, ',') AS causa_acidente,
-    STRING_AGG(DISTINCT ta.categoria_acidente, ',') AS categoria_acidente,
-
-    f.modelo_veiculo,
-    f.tipo_veiculo,
-    mu.marcas_validadas AS marcas,
-
-    f.idade,
-    f.sexo,
-    f.km,
-    f.br,
-    f.delegacia,
-    f.condicao_metereologica,
-    f.longitude,
-    f.latitude,
-    f.tipo_pista,
-    f.fase_dia
-  FROM Silver.fato_rodovias AS f
-  LEFT JOIN marcas_unificadas mu ON mu.id_acidente_bronze = f.id_acidente_bronze
-  LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-  LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-  LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-
-  ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
-
-  GROUP BY
-    f.id_acidente_bronze, f.total_mortos, f.total_feridos, f.total_feridos_graves,
-    f.total_feridos_leves, f.total_veiculos, f.modelo_veiculo, f.tipo_veiculo,
-    f.idade, f.sexo, f.km, f.br, f.delegacia, f.condicao_metereologica,
-    f.longitude, f.latitude, f.tipo_pista, f.fase_dia,
-    c.data_completa, c.ano, c.nome_mes, c.nome_dia_semana, c.flag_fim_de_semana,
-    l.municipio, l.uf_abrev, l.localidade, mu.marcas_validadas
-
-  ORDER BY c.data_completa DESC
+  const baseQuery = `
+    SELECT *
+    FROM gold.analytics_rodovias
+    ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
+    ORDER BY data_completa DESC
   `;
 
   const QueryStream = require('pg-query-stream');
@@ -415,18 +191,44 @@ const exportRodovias = async (req, res) => {
 
   const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g, '-');
   const filename = `relatorio_rodovias_${timestamp}.csv`;
+
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
-  const headerRow = [
-    'ID','Mortos','Feridos','Feridos Graves','Feridos Leves','Veículos',
-    'Data','Ano','Mês','Dia Semana','Fim de Semana',
-    'Município','UF','Localidade',
-    'Tipo Acidente','Categoria Acidente','Causa Acidente',
-    'Modelo Veículo','Tipo Veículo','Marcas',
-    'Idade','Sexo','KM','BR','Delegacia','Condicao Meteo','Longitude','Latitude','Tipo Pista','Fase Dia'
-  ];
-  res.write(headerRow.join(',') + '\n');
+  const headerRow = Object.keys({
+    id_acidente_bronze: '',
+    total_mortos: '',
+    total_feridos: '',
+    total_feridos_graves: '',
+    total_feridos_leves: '',
+    total_veiculos: '',
+    data_completa: '',
+    ano: '',
+    nome_mes: '',
+    nome_dia_semana: '',
+    flag_fim_de_semana: '',
+    municipio: '',
+    uf_abrev: '',
+    localidade: '',
+    tipo_acidente: '',
+    causa_acidente: '',
+    categoria_acidente: '',
+    modelo_veiculo: '',
+    tipo_veiculo: '',
+    marcas: '',
+    idade: '',
+    sexo: '',
+    km: '',
+    br: '',
+    delegacia: '',
+    condicao_metereologica: '',
+    longitude: '',
+    latitude: '',
+    tipo_pista: '',
+    fase_dia: ''
+  }).join(',');
+
+  res.write(headerRow + '\n');
 
   let client;
   try {
@@ -434,87 +236,39 @@ const exportRodovias = async (req, res) => {
     const qs = new QueryStream(baseQuery, queryParams, { batchSize: 1000 });
     const stream = client.query(qs);
 
-    stream.on('data', (r) => {
-      const safe = (v) => {
-        if (v === null || v === undefined) return '';
-        return String(v).replace(/"/g, '""');
-      };
-      const cols = [
-        `"${safe(r.id_acidente_bronze)}"`,
-        `"${safe(r.total_mortos)}"`,
-        `"${safe(r.total_feridos)}"`,
-        `"${safe(r.total_feridos_graves)}"`,
-        `"${safe(r.total_feridos_leves)}"`,
-        `"${safe(r.total_veiculos)}"`,
-
-        `"${safe(r.data_completa)}"`,
-        `"${safe(r.ano)}"`,
-        `"${safe(r.nome_mes)}"` ,
-        `"${safe(r.nome_dia_semana)}"`,
-        `"${safe(r.flag_fim_de_semana)}"`,
-
-        `"${safe(r.municipio)}"`,
-        `"${safe(r.uf_abrev)}"`,
-        `"${safe(r.localidade)}"`,
-
-        `"${safe(r.tipo_acidente)}"`,
-        `"${safe(r.categoria_acidente)}"`,
-        `"${safe(r.causa_acidente)}"`,
-
-        `"${safe(r.modelo_veiculo)}"`,
-        `"${safe(r.tipo_veiculo)}"`,
-        `"${safe(r.marcas)}"`,
-
-        `"${safe(r.idade)}"`,
-        `"${safe(r.sexo)}"`,
-        `"${safe(r.km)}"`,
-        `"${safe(r.br)}"`,
-        `"${safe(r.delegacia)}"`,
-        `"${safe(r.condicao_metereologica)}"`,
-        `"${safe(r.longitude)}"`,
-        `"${safe(r.latitude)}"`,
-        `"${safe(r.tipo_pista)}"`,
-        `"${safe(r.fase_dia)}"`,
-      ];
-      const ok = res.write(cols.join(',') + '\n');
-      if (!ok) stream.pause();
+    stream.on('data', (row) => {
+      const values = Object.values(row).map(v =>
+        v === null || v === undefined ? '' : `"${String(v).replace(/"/g, '""')}"`
+      );
+      res.write(values.join(',') + '\n');
     });
 
-    res.on('drain', () => {
-      try { if (stream && stream.readable) stream.resume(); } catch (e) { /* ignore */ }
-    });
-
-    stream.on('end', async () => {
+    stream.on('end', () => {
+      client.release();
       res.end();
-      try { client.release(); } catch (e) { /* ignore */ }
     });
 
-    stream.on('error', async (err) => {
-      console.error('Stream error ao exportar rodovias:', err);
-      try { client.release(); } catch (e) { /* ignore */ }
-      if (!res.headersSent) res.status(500).json({ error: 'Erro ao exportar rodovias (stream)' });
-      else res.end();
+    stream.on('error', err => {
+      client.release();
+      res.status(500).json({ error: 'Erro ao exportar rodovias' });
     });
   } catch (err) {
-    console.error('Erro ao iniciar export stream rodovias:', err);
-    try { if (client) client.release(); } catch (e) { /* ignore */ }
-    if (!res.headersSent) res.status(500).json({ error: 'Erro ao exportar rodovias' });
-    else res.end();
+    if (client) client.release();
+    res.status(500).json({ error: 'Erro ao exportar rodovias' });
   }
 };
-
 // Endpoint para indicadores agregados (cards + gráficos)
 const getIndicadores = async (req, res) => {
   const filterMap = {
-    ano: 'c.ano',
-    uf: 'l.uf_abrev',
-    categoria_acidente: 'ta.categoria_acidente',
-    municipio: 'l.municipio',
-    mes: 'c.nome_mes',
-    nome_dia_semana: 'c.nome_dia_semana',
-    flag_fim_de_semana: 'c.flag_fim_de_semana',
-    tipo_acidente: 'ta.tipo_acidente',
-    causa_acidente: 'ta.causa_acidente',
+    ano: 'ano',
+    uf: 'uf_abrev',
+    categoria_acidente: 'categoria_acidente',
+    municipio: 'municipio',
+    mes: 'nome_mes',
+    nome_dia_semana: 'nome_dia_semana',
+    flag_fim_de_semana: 'flag_fim_de_semana',
+    tipo_acidente: 'tipo_acidente',
+    causa_acidente: 'causa_acidente',
   };
 
   const filters = req.query;
@@ -522,211 +276,161 @@ const getIndicadores = async (req, res) => {
   const queryParams = [];
   let paramIndex = 1;
 
-  // Monta filtros dinâmicos (reutiliza lógica de getRodovias)
   for (const [key, rawValue] of Object.entries(filters)) {
-    if (rawValue === undefined || rawValue === '') continue;
-    if (key === 'data_inicio' || key === 'data_fim') continue;
-
+    if (!rawValue || key === 'data_inicio' || key === 'data_fim') continue;
     const column = filterMap[key];
     if (!column) continue;
 
     const value = String(rawValue);
 
     if (value.includes(',')) {
-      const parts = value.split(',').map(p => p.trim()).filter(p => p.length > 0);
-      if (parts.length === 0) continue;
-
-      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
-        const ilikeClauses = parts.map(() => `${column} ILIKE $${paramIndex++}`).join(' OR ');
-        whereClauses.push(`(${ilikeClauses})`);
-        queryParams.push(...parts);
-      } else {
-        const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
-        whereClauses.push(`${column} IN (${placeholders})`);
-        queryParams.push(...parts);
-      }
+      const parts = value.split(',').map(p => p.trim()).filter(Boolean);
+      const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
+      whereClauses.push(`${column} IN (${placeholders})`);
+      queryParams.push(...parts);
     } else {
-      if (["uf", "uf_abrev", "municipio", "nome_mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
-        whereClauses.push(`${column} ILIKE $${paramIndex}`);
-        queryParams.push(value);
-        paramIndex++;
-      } else {
-        whereClauses.push(`${column} = $${paramIndex}`);
-        queryParams.push(value);
-        paramIndex++;
-      }
+      whereClauses.push(`${column} = $${paramIndex}`);
+      queryParams.push(value);
+      paramIndex++;
     }
   }
 
-  // Filtro por intervalo de datas
   if (filters.data_inicio && filters.data_fim) {
-    whereClauses.push(`c.data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    whereClauses.push(`data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
     queryParams.push(filters.data_inicio, filters.data_fim);
     paramIndex += 2;
   } else if (filters.data_inicio) {
-    whereClauses.push(`c.data_completa >= $${paramIndex}`);
+    whereClauses.push(`data_completa >= $${paramIndex}`);
     queryParams.push(filters.data_inicio);
     paramIndex++;
   } else if (filters.data_fim) {
-    whereClauses.push(`c.data_completa <= $${paramIndex}`);
+    whereClauses.push(`data_completa <= $${paramIndex}`);
     queryParams.push(filters.data_fim);
     paramIndex++;
   }
 
-  const whereClause = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
+  const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
   try {
-    // Query agregada para indicadores gerais
     const indicadoresQuery = `
       SELECT
-        COUNT(DISTINCT f.id_acidente_bronze) AS total_acidentes,
-        SUM(f.total_mortos) AS total_mortos,
-        SUM(f.total_feridos) AS total_feridos,
-        SUM(f.total_feridos_graves) AS total_feridos_graves,
-        SUM(f.total_feridos_leves) AS total_feridos_leves,
-        COUNT(DISTINCT l.id_localidade) AS rodovias_monitoradas
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
+        COUNT(*) AS total_acidentes,
+        SUM(total_mortos) AS total_mortos,
+        SUM(total_feridos) AS total_feridos,
+        SUM(total_feridos_graves) AS total_feridos_graves,
+        SUM(total_feridos_leves) AS total_feridos_leves,
+        COUNT(DISTINCT municipio) AS rodovias_monitoradas
+      FROM gold.analytics_rodovias
+      ${whereSQL}
     `;
 
-    // Query de acidentes por mês
     const porMesQuery = `
       SELECT
-        c.nome_mes,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total,
-        SUM(f.total_mortos) AS mortos
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY c.nome_mes
-      ORDER BY c.nome_mes
+        nome_mes,
+        COUNT(*) AS total,
+        SUM(total_mortos) AS mortos
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY nome_mes
+      ORDER BY nome_mes
     `;
 
-    // Query de acidentes por causa
     const porCausaQuery = `
       SELECT
-        ta.causa_acidente,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY ta.causa_acidente
+        causa_acidente,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY causa_acidente
       ORDER BY total DESC
       LIMIT 10
     `;
 
-    // Query de acidentes por tipo
     const porTipoQuery = `
       SELECT
-        ta.tipo_acidente,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY ta.tipo_acidente
+        tipo_acidente,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY tipo_acidente
       ORDER BY total DESC
       LIMIT 10
     `;
 
-    // Query de acidentes por categoria
     const porCategoriaQuery = `
       SELECT
-        ta.categoria_acidente,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY ta.categoria_acidente
+        categoria_acidente,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY categoria_acidente
       ORDER BY total DESC
       LIMIT 10
     `;
 
-    // Query de acidentes por UF
     const porUfQuery = `
       SELECT
-        l.uf_abrev,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total,
-        SUM(f.total_mortos) AS mortos
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY l.uf_abrev
+        uf_abrev,
+        COUNT(*) AS total,
+        SUM(total_mortos) AS mortos
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY uf_abrev
       ORDER BY total DESC
     `;
 
-    // Query de acidentes por dia da semana
     const porDiaSemanaQuery = `
       SELECT
-        c.nome_dia_semana,
-        COUNT(DISTINCT f.id_acidente_bronze) AS total
-      FROM silver.fato_rodovias f
-      LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-      LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-      LEFT JOIN Silver.Dim_Tipo_Acidente AS ta ON f.fk_tipo_acidente = ta.id_acidente_tipo
-      ${whereClause}
-      GROUP BY c.nome_dia_semana
-      ORDER BY c.nome_dia_semana
+        nome_dia_semana,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY nome_dia_semana
+      ORDER BY nome_dia_semana
     `;
 
-    // Executa todas as queries em paralelo
-    const indicadorParam = req.query.indicador || 'all'; // 'all', 'gerais', 'mes', 'causa', 'tipo', 'categoria', 'uf', 'dia_semana'
-    
-    const queriesToExecute = {};
-    const queriesToFetch = [];
+    const indicadorParam = req.query.indicador || 'all';
 
-    // Define quais queries executar baseado no parâmetro 'indicador'
+    const queries = {};
+    const order = [];
+
     if (indicadorParam === 'all' || indicadorParam === 'gerais') {
-      queriesToExecute.indicadores = db.query(indicadoresQuery, queryParams);
-      queriesToFetch.push('indicadores');
+      queries.indicadores = db.query(indicadoresQuery, queryParams);
+      order.push('indicadores');
     }
     if (indicadorParam === 'all' || indicadorParam === 'mes') {
-      queriesToExecute.porMes = db.query(porMesQuery, queryParams);
-      queriesToFetch.push('porMes');
+      queries.porMes = db.query(porMesQuery, queryParams);
+      order.push('porMes');
     }
     if (indicadorParam === 'all' || indicadorParam === 'causa') {
-      queriesToExecute.porCausa = db.query(porCausaQuery, queryParams);
-      queriesToFetch.push('porCausa');
+      queries.porCausa = db.query(porCausaQuery, queryParams);
+      order.push('porCausa');
     }
     if (indicadorParam === 'all' || indicadorParam === 'tipo') {
-      queriesToExecute.porTipo = db.query(porTipoQuery, queryParams);
-      queriesToFetch.push('porTipo');
+      queries.porTipo = db.query(porTipoQuery, queryParams);
+      order.push('porTipo');
     }
     if (indicadorParam === 'all' || indicadorParam === 'categoria') {
-      queriesToExecute.porCategoria = db.query(porCategoriaQuery, queryParams);
-      queriesToFetch.push('porCategoria');
+      queries.porCategoria = db.query(porCategoriaQuery, queryParams);
+      order.push('porCategoria');
     }
     if (indicadorParam === 'all' || indicadorParam === 'uf') {
-      queriesToExecute.porUf = db.query(porUfQuery, queryParams);
-      queriesToFetch.push('porUf');
+      queries.porUf = db.query(porUfQuery, queryParams);
+      order.push('porUf');
     }
     if (indicadorParam === 'all' || indicadorParam === 'dia_semana') {
-      queriesToExecute.porDiaSemana = db.query(porDiaSemanaQuery, queryParams);
-      queriesToFetch.push('porDiaSemana');
+      queries.porDiaSemana = db.query(porDiaSemanaQuery, queryParams);
+      order.push('porDiaSemana');
     }
 
-    // Executa apenas as queries necessárias
-    const resultados = await Promise.all(Object.values(queriesToExecute));
-    
+    const resultsArray = await Promise.all(Object.values(queries));
+
     const results = {};
-    queriesToFetch.forEach((key, index) => {
-      results[key] = resultados[index];
+    order.forEach((key, index) => {
+      results[key] = resultsArray[index];
     });
 
-    // Monta resposta consolidada
-    const response = {
+    res.json({
       indicadores_gerais: results.indicadores?.rows[0] || {
         total_acidentes: 0,
         total_mortos: 0,
@@ -741,13 +445,13 @@ const getIndicadores = async (req, res) => {
       acidentes_por_categoria: results.porCategoria?.rows || [],
       acidentes_por_uf: results.porUf?.rows || [],
       acidentes_por_dia_semana: results.porDiaSemana?.rows || []
-    };
+    });
 
-    res.json(response);
   } catch (error) {
     console.error('Erro ao consultar indicadores:', error);
     res.status(500).json({ error: 'Erro ao consultar indicadores' });
   }
 };
+
 
 module.exports = { getRodovias, getRodoviaById, exportRodovias, getIndicadores };

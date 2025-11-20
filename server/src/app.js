@@ -1,12 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 
+const { swaggerUi, swaggerSpec } = require('./swagger/swagger');
 const authMiddleware = require('./middlewares/auth');
 const authRoutes = require('./routes/auth');
 const rodoviasRoutes = require('./routes/rodovias');
 const dimensoesRoutes = require('./routes/dimensoes');
 
 const app = express();
+
+app.use("/api/docs", (req, res, next) => {
+    next();
+  }, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  
 
 app.use(cors({
     origin: [
