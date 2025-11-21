@@ -41,17 +41,18 @@ module.exports = {
     },
 
     // =======================================
-    // FRONTEND (servindo a pasta dist)
+    // FRONTEND (servindo a pasta build)
     // =======================================
     {
       name: "client",
       script: "/home/ubuntu/.nvm/versions/node/v20.19.4/lib/node_modules/pm2/lib/API/Serve.js",
-      args: "build 4173 --spa",
       cwd: "/home/tcc/seguranca-publica-brasil/client",
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        PM2_SERVE_PATH: "build",   // pasta gerada pelo Vite
+        PM2_SERVE_PORT: 4173,      // mesma porta que o nginx faz proxy_pass
+        PM2_SERVE_SPA: "true"      // modo SPA
       }
     }
-    
   ]
-}
+};

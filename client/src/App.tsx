@@ -13,6 +13,9 @@ export default function App() {
         return <Dashboard />;
       case 'rodovias':
         return <Rodovias />;
+      case 'ocorrencias':
+        return <Ocorrencias />;
+      case 'presidios':
     }
   };
 
