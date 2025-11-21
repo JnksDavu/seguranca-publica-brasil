@@ -45,13 +45,14 @@ module.exports = {
     // =======================================
     {
       name: "client",
-      script: "http-server",
-      args: "build -p 4173 -P http://127.0.0.1:4173? -c-1",
+      script: "serve",
+      args: "-s build -l 4173",
       cwd: "client",
       env: {
         NODE_ENV: "production"
       }
     }
+    
     
   ]
 }
