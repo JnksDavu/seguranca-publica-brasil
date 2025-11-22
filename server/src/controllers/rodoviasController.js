@@ -398,7 +398,6 @@ const getIndicadores = async (req, res) => {
       ${whereSQL ? 'AND' : 'WHERE'} modelo_veiculo IS NOT NULL AND modelo_veiculo != ''
       GROUP BY modelo_veiculo
       ORDER BY total DESC
-      LIMIT 15
     `;
 
     const porTipoPistaQuery = `
