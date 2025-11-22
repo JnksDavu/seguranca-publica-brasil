@@ -11,18 +11,27 @@ with open(SQL_PATH, "r", encoding="utf-8") as f:
 
 engine = get_engine()
 
+# Lock para evitar execuções simultâneas
 try:
     with engine.begin() as conn:
-        conn.execute(text(
-            "LOCK TABLE gold.analytics_rodovias IN ACCESS EXCLUSIVE MODE NOWAIT;"
-        ))
+        conn.execute(
+            text("LOCK TABLE gold.analytics_rodovias IN ACCESS EXCLUSIVE MODE NOWAIT;")
+        )
 except OperationalError:
-    print("Já existe uma pipeline rodando. Abortando.")
+    print("Já existe pipeline rodando. Abortando.")
     exit(1)
 
 print("Lock obtido. Executando pipeline...")
 
-with engine.connect() as conn:
-    conn.exec_driver_sql(sql_script)
+# Executa SQL via psycopg2 raw connection (aceita múltiplos statements)
+raw_conn = engine.raw_connection()
+cur = raw_conn.cursor()
 
-print("✅ Tabela gold.analytics_rodovias atualizada com sucesso!")
+try:
+    cur.execute(sql_script)
+    raw_conn.commit()
+finally:
+    cur.close()
+    raw_conn.close()
+
+print("Tabela gold.analytics_rodovias atualizada com sucesso!")
