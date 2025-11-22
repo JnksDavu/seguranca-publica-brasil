@@ -4,34 +4,38 @@ from sqlalchemy.exc import OperationalError
 from scripts.db import get_engine
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-SQL_PATH = os.path.join(BASE_DIR, "queries", "gold", "analytics_rodovias.sql")
 
-with open(SQL_PATH, "r", encoding="utf-8") as f:
-    sql_script = f.read()
+SQL_FILES = [
+    os.path.join(BASE_DIR, "queries", "gold", "analytics_rodovias.sql"),
+    os.path.join(BASE_DIR, "queries", "gold", "analytics_rodovias_percapita.sql"),
+]
 
 engine = get_engine()
 
-# Lock para evitar execuções simultâneas
 try:
     with engine.begin() as conn:
-        conn.execute(
-            text("LOCK TABLE gold.analytics_rodovias IN ACCESS EXCLUSIVE MODE NOWAIT;")
-        )
+        conn.execute(text(
+            "LOCK TABLE gold.analytics_rodovias IN ACCESS EXCLUSIVE MODE NOWAIT;"
+        ))
 except OperationalError:
     print("Já existe pipeline rodando. Abortando.")
     exit(1)
 
-print("Lock obtido. Executando pipeline...")
+print("Lock obtido. Executando pipelines SQL...")
 
-# Executa SQL via psycopg2 raw connection (aceita múltiplos statements)
 raw_conn = engine.raw_connection()
 cur = raw_conn.cursor()
 
 try:
-    cur.execute(sql_script)
+    for sql_path in SQL_FILES:
+        print(f"Executando script: {sql_path}")
+        with open(sql_path, "r", encoding="utf-8") as f:
+            sql_script = f.read()
+        cur.execute(sql_script)
+
     raw_conn.commit()
+    print("Todas as tabelas gold foram atualizadas com sucesso!")
+
 finally:
     cur.close()
     raw_conn.close()
-
-print("Tabela gold.analytics_rodovias atualizada com sucesso!")

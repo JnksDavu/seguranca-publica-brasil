@@ -410,6 +410,13 @@ const getIndicadores = async (req, res) => {
       ORDER BY total DESC
     `;
 
+    const porPercapita = `
+    select *
+    from gold.analytics_rodovias_percapita
+    ${whereSQL}
+
+    `
+
     const indicadorParam = req.query.indicador || 'all';
 
     const queries = {};
@@ -459,6 +466,10 @@ const getIndicadores = async (req, res) => {
       queries.porTipoPista = db.query(porTipoPistaQuery, queryParams);
       order.push('porTipoPista');
     }
+    if (indicadorParam === 'all' || indicadorParam === 'percapita') {
+      queries.porPercapita = db.query(porPercapita, queryParams);
+      order.push('porPercapita');
+    }
 
     const resultsArray = await Promise.all(Object.values(queries));
 
@@ -485,7 +496,9 @@ const getIndicadores = async (req, res) => {
       acidentes_por_condicao_metereologica: results.porCondicaoMeterologica?.rows || [],
       acidentes_por_marcas: results.porMarcas?.rows || [],
       acidentes_por_modelo_veiculo: results.porModeloVeiculo?.rows || [],
-      acidentes_por_tipo_pista: results.porTipoPista?.rows || []
+      acidentes_por_tipo_pista: results.porTipoPista?.rows || [],
+      acidentes_por_percapita: results.porPercapita?.rows || []
+
     });
 
   } catch (error) {
