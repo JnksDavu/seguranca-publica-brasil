@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import { fetchRodovias, Rodovia } from '../services/rodoviasService';
 import { fetchIndicadores, IndicadoresResponse } from '../services/indicadoresService';
 import { useDebounce } from '../hooks/useDebounce';
-import { StatCard } from './StatCard';
+import { StatCard } from './ui/StatCard';
+import { Charts } from './RodoviasComponents/Charts';
+import { Reports } from './RodoviasComponents/Reports';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Info, Skull, Bandage, Route } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2 } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
 import Select from 'react-select';
 
 export function Rodovias() {
@@ -28,25 +27,18 @@ export function Rodovias() {
 
   const [rodovias, setRodovias] = useState<Rodovia[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [serverChunkSize] = useState<number>(10000); // fetch 10k per server request
+  const [serverChunkSize] = useState<number>(10000);
   const [lastServerPageFetched, setLastServerPageFetched] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Indicadores state
   const [indicadores, setIndicadores] = useState<IndicadoresResponse | null>(null);
   const [indicadoresLoading, setIndicadoresLoading] = useState(false);
 
-  // view mode: 'graficos' shows charts + small table; 'relatorio' shows the big paginated report
   const [viewMode, setViewMode] = useState<'graficos' | 'relatorio'>('graficos');
 
-  // pagination for the report (tabelão)
   const [pageSize, setPageSize] = useState<number>(100);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
-  const exportBtnRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const [exportLoading, setExportLoading] = useState<boolean>(false);
   const [exportProgress, setExportProgress] = useState<{fetched:number, pages:number}>({ fetched: 0, pages: 0 });
 
@@ -60,7 +52,6 @@ export function Rodovias() {
   const [causaOptions, setCausaOptions] = useState<{value:string;label:string}[]>([]);
   const [categoriaOptions, setCategoriaOptions] = useState<{value:string;label:string}[]>([]);
 
-  // Estado consolidado dos filtros para debounce
   const [filtersState, setFiltersState] = useState({
     dateStart,
     dateEnd,
@@ -78,7 +69,6 @@ export function Rodovias() {
   // Debounce dos filtros
   const debouncedFilters = useDebounce(filtersState, 500);
 
-  // Atualizar estado consolidado quando qualquer filtro muda
   useEffect(() => {
     setFiltersState({
       dateStart,
@@ -111,7 +101,6 @@ export function Rodovias() {
     menuList: (base: any) => ({ ...base, maxHeight: 36 * 5 }), 
   };
 
-  // Fetch rodovias quando filtros debouncados mudam
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -150,7 +139,6 @@ export function Rodovias() {
     return () => { cancelled = true; };
   }, [debouncedFilters, serverChunkSize]);
 
-  // Buscar indicadores agregados (com debounce)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -248,7 +236,6 @@ export function Rodovias() {
     setSelectedCategoriaAcidente([]);
   };
 
-  // pagination helpers for the report view (use totalCount for total pages)
   const totalPages = Math.max(1, Math.ceil((totalCount || 0) / pageSize));
   const pagedData = rodovias.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -310,9 +297,6 @@ export function Rodovias() {
     URL.revokeObjectURL(url);
   };
 
-  // XLSX export removed (client-side XLSX can OOM for very large datasets)
-
-  // Build the filters object to send to the backend (same mapping used on initial fetch)
   const buildFiltersForRequest = () => ({
     data_inicio: dateStart || undefined,
     data_fim: dateEnd || undefined,
@@ -327,7 +311,6 @@ export function Rodovias() {
     categoria_acidente: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
   });
 
-  // Fetch all pages from backend according to current filters. chunkSize controls how many rows per request.
   const fetchAllFiltered = async (chunkSize = serverChunkSize) : Promise<Rodovia[]> => {
     setExportLoading(true);
     setExportProgress({ fetched: 0, pages: 0 });
@@ -336,17 +319,14 @@ export function Rodovias() {
     let page = 1;
     while (true) {
       try {
-        // ask for this page
-        // eslint-disable-next-line no-await-in-loop
+
         const res = await fetchRodovias({ ...filtersBase, page, limit: chunkSize } as any);
         const chunk = res.rows || [];
         if (!chunk || chunk.length === 0) break;
         all.push(...chunk);
         setExportProgress({ fetched: all.length, pages: page });
-        if (chunk.length < chunkSize) break; // last page
+        if (chunk.length < chunkSize) break; 
         page += 1;
-        // small pause to avoid hammering DB in tight loops (optional)
-        // await new Promise(r => setTimeout(r, 50));
       } catch (err) {
         console.error('Erro enquanto buscava páginas para exportação', err);
         break;
@@ -356,11 +336,11 @@ export function Rodovias() {
     return all;
   };
 
-  // When user navigates pages, ensure we have data loaded (fetch next 10k chunk(s) from server as needed)
+ 
   useEffect(() => {
     let cancelled = false;
     const ensureDataForPage = async (pageNum: number) => {
-      const requiredIndex = pageNum * pageSize; // we need items up to this index
+      const requiredIndex = pageNum * pageSize;
       try {
         while (!cancelled && rodovias.length < requiredIndex && rodovias.length < totalCount) {
           const nextServerPage = lastServerPageFetched + 1;
@@ -368,44 +348,35 @@ export function Rodovias() {
           const res = await fetchRodovias({ ...filters, page: nextServerPage, limit: serverChunkSize } as any);
           const rows = res.rows || [];
           if (!rows || rows.length === 0) break;
-          // append rows
           setRodovias((prev) => {
-            // avoid duplicates if concurrent
             const exists = prev.length >= (nextServerPage - 1) * serverChunkSize + rows.length;
             if (exists) return prev;
             return [...prev, ...rows];
           });
           setLastServerPageFetched(nextServerPage);
-          // loop will check again whether we have enough
         }
       } catch (err) {
         if (!cancelled) console.error('Erro ao buscar páginas adicionais', err);
       }
     };
 
-    // trigger when page changes
     ensureDataForPage(currentPage);
     return () => { cancelled = true; };
   }, [currentPage, pageSize, rodovias.length, totalCount, lastServerPageFetched]);
 
   const handleExportAll = async (format: 'csv' | 'json' | 'xlsx') => {
-    setExportMenuOpen(false);
-    // Prefer server-side CSV streaming to avoid browser OOM
     if (format === 'csv') {
       try {
         setExportLoading(true);
         const filters = buildFiltersForRequest();
-        // build query string from filters (only defined values)
         const params = Object.entries(filters)
           .filter(([, v]) => v !== undefined && v !== '')
           .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
           .join('&');
-        // Build absolute backend URL from axios baseURL to avoid dev-server proxy inconsistencies
         const base = (api && (api.defaults && api.defaults.baseURL)) || '';
         const trimmedBase = base.replace(/\/$/, '');
         const url = `${trimmedBase}/rodovias/export${params ? `?${params}` : ''}`;
 
-        // Create an anchor with download attribute and open in a new tab to force saving to disk
         const a = document.createElement('a');
         a.href = url;
         a.setAttribute('download', `relatorio_rodovias_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`);
@@ -414,7 +385,6 @@ export function Rodovias() {
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
-        // remove anchor after a short delay
         setTimeout(() => { try { document.body.removeChild(a); } catch (e) { /* ignore */ } }, 2000);
       } catch (err) {
         console.error('Erro ao iniciar exportação no servidor', err);
@@ -424,8 +394,7 @@ export function Rodovias() {
       return;
     }
 
-    // For JSON/XLSX we fallback to client-side fetch-and-export (may be heavy for very large datasets)
-    const chunkSize = 1000; // you can tune this
+    const chunkSize = 1000; 
     try {
       const data = await fetchAllFiltered(chunkSize);
       const nameSuffix = `${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}_${data.length}`;
@@ -435,42 +404,6 @@ export function Rodovias() {
       setExportLoading(false);
     }
   };
-
-  // position and outside-click handling for the portal menu
-  useEffect(() => {
-    if (!exportMenuOpen || !exportBtnRef.current) return;
-
-    const menuWidth = 176; // px
-    const updatePosition = () => {
-      const rect = exportBtnRef.current!.getBoundingClientRect();
-      const top = rect.bottom + 8; // gap
-      let left = rect.left;
-      // keep menu inside viewport
-      if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
-      if (left < 8) left = 8;
-      setMenuStyle({ position: 'fixed', top: `${top}px`, left: `${left}px`, width: `${menuWidth}px`, zIndex: 9999 });
-    };
-
-    updatePosition();
-    const onScroll = () => updatePosition();
-    const onResize = () => updatePosition();
-    const onDocClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (menuRef.current && menuRef.current.contains(target)) return;
-      if (exportBtnRef.current && exportBtnRef.current.contains(target)) return;
-      setExportMenuOpen(false);
-    };
-
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onResize);
-    document.addEventListener('mousedown', onDocClick);
-
-    return () => {
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onResize);
-      document.removeEventListener('mousedown', onDocClick);
-    };
-  }, [exportMenuOpen]);
 
   const statsCards = [
     {
@@ -487,7 +420,7 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.total_mortos?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'down' as const,
-      icon: Skull,
+      icon: AlertCircle,
       color: 'text-red-600',
       bgColor: 'bg-red-50'
     },
@@ -496,7 +429,7 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.total_feridos?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'down' as const,
-      icon: Bandage,
+      icon: AlertCircle,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
     },
@@ -505,23 +438,11 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.rodovias_monitoradas?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'up' as const,
-      icon: Route,
+      icon: Navigation,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
   ];
-
-  const monthlyAccidents = (indicadores?.acidentes_por_mes || []).map((item) => ({
-    month: item.nome_mes || '',
-    total: item.total || 0,
-    fatal: item.mortos || 0,
-    comFeridos: (item.total || 0) - (item.mortos || 0),
-  }));
-
-  const causeData = (indicadores?.acidentes_por_causa || []).slice(0, 10).map((item) => ({
-    cause: item.causa_acidente || '',
-    value: item.total || 0,
-  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -759,255 +680,49 @@ export function Rodovias() {
 
       
       {viewMode === 'graficos' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statsCards.map((stat, i) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <StatCard
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              trend={stat.trend as 'up' | 'down'}
-              icon={stat.icon}
-              color={stat.color}
-              bgColor={stat.bgColor}
-              loading={indicadoresLoading}
-            />
-          </motion.div>
-        ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {statsCards.map((stat, i) => (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <StatCard
+                  title={stat.title}
+                  value={stat.value}
+                  change={stat.change}
+                  trend={stat.trend as 'up' | 'down'}
+                  icon={stat.icon}
+                  color={stat.color}
+                  bgColor={stat.bgColor}
+                  loading={indicadoresLoading}
+                />
+              </motion.div>
+            ))}
+          </div>
+          
+          <Charts indicadores={indicadores} indicadoresLoading={indicadoresLoading} />
         </div>
       )}
 
-      {/* Gráficos */}
-      {viewMode === 'graficos' && (
-        <div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="border-blue-100 shadow-lg">
-          <CardHeader><CardTitle className="text-blue-900">Evolução Mensal</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyAccidents}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="month" stroke="#3b82f6" /><YAxis stroke="#3b82f6" />
-                <Tooltip /><Legend />
-                <Line dataKey="total" stroke="#2563eb" />
-                <Line dataKey="fatal" stroke="#dc2626" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-100 shadow-lg">
-          <CardHeader><CardTitle className="text-blue-900">Principais Causas</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={causeData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" /><YAxis dataKey="cause" type="category" width={150} />
-                <Tooltip /><Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="border-blue-100 shadow-lg">
-          <CardHeader><CardTitle className="text-blue-900">Acidentes por Tipo</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={indicadores?.acidentes_por_tipo || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="tipo_acidente" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-100 shadow-lg">
-          <CardHeader><CardTitle className="text-blue-900">Acidentes por Categoria</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={indicadores?.acidentes_por_categoria || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="categoria_acidente" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total" fill="#f59e0b" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 mb-6">
-        <Card className="border-blue-100 shadow-lg">
-          <CardHeader><CardTitle className="text-blue-900">Distribuição por UF</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={indicadores?.acidentes_por_uf || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="uf_abrev" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="total" fill="#06b6d4" name="Total de Acidentes" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="mortos" fill="#ef4444" name="Mortos" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        </div>
-        </div>
-      )}
-
-      {/* Relatório (tabelão) */}
       {viewMode === 'relatorio' && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="border-blue-100 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-blue-900">Relatório Completo - Rodovias</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between mb-4 gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-blue-700">Linhas por página:</label>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => handleChangePageSize(Number(e.target.value))}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
-                    <option value={300}>300</option>
-                    <option value={500}>500</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      ref={exportBtnRef}
-                      onClick={() => setExportMenuOpen((s) => !s)}
-                      disabled={exportLoading}
-                      className={`flex items-center gap-2 mb-3 px-3 py-2 rounded shadow ${exportLoading ? 'bg-gray-300 text-gray-600' : 'bg-blue-600 text-white'}`}
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span className="text-sm">Exportar</span>
-                      <span className="ml-1 text-xs">▾</span>
-                    </button>
-                    <div className="ml-2 flex items-center" title="O botão Exportar irá baixar todos os registros que correspondem aos filtros; a tabela abaixo está limitada aos primeiros 10.000 registros para manter a UI responsiva.">
-                      <Info className="w-5 h-5 text-blue-600" />
-                    </div>
-                    {exportLoading && (
-                      <div className="text-sm text-gray-600">Exportando... {exportProgress.fetched} registros ({exportProgress.pages} páginas)</div>
-                    )}
-                  </div>
-
-                  {/* portal-based menu: rendered into document.body so it sits above other stacking contexts */}
-                  {exportMenuOpen && exportBtnRef.current && createPortal(
-                    <div
-                      ref={menuRef}
-                      style={menuStyle}
-                      className="bg-white border rounded shadow z-50"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button onClick={() => { handleExportAll('csv'); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">CSV</button>
-                      <button onClick={() => { handleExportAll('json'); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">JSON</button>
-                    </div>,
-                    document.body
-                  )}
-                </div>
-              </div>
-
-              {/* Top pagination controls */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-sm text-gray-600">Página {currentPage} de {totalPages} — {totalCount} registros filtrados</div>
-                <div className="flex items-center gap-2">
-                  <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Anterior</button>
-                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Próximo</button>
-                </div>
-              </div>
-
-              <div className="relative">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Dia Semana</TableHead>
-                      <TableHead>Localidade</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Causa</TableHead>
-                      <TableHead>Mortos</TableHead>
-                      <TableHead>Feridos</TableHead>
-                      <TableHead>Feridos Graves</TableHead>
-                      <TableHead>Feridos Leves</TableHead>
-                      <TableHead>Tipo Veículo</TableHead>
-                      <TableHead>Modelo Veículo</TableHead>
-                      <TableHead>Marcas</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {pagedData.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={13} className="text-center text-gray-500">
-                          Nenhum dado encontrado
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      pagedData.map((item, i) => (
-                        <TableRow key={i} className="hover:bg-blue-50">
-                          <TableCell>{item.data_completa}</TableCell>
-                          <TableCell>{item.nome_dia_semana}</TableCell>
-                          <TableCell>{item.localidade}</TableCell>
-
-                          <TableCell>{item.tipo_acidente}</TableCell>
-                          <TableCell>{item.categoria_acidente}</TableCell>
-                          <TableCell>{item.causa_acidente}</TableCell>
-
-                          <TableCell>{item.total_mortos}</TableCell>
-                          <TableCell>{item.total_feridos}</TableCell>
-                          <TableCell>{item.total_feridos_graves}</TableCell>
-                          <TableCell>{item.total_feridos_leves}</TableCell>
-
-                          <TableCell>{item.tipo_veiculo}</TableCell>
-                          <TableCell>{item.modelo_veiculo}</TableCell>
-                          <TableCell>{item.marcas}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-
-
-                {loading && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70">
-                    <div className="text-sm text-blue-700">Carregando...</div>
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom pagination controls */}
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">Página {currentPage} de {totalPages}</div>
-                <div className="flex items-center gap-2">
-                  <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Anterior</button>
-                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-3 py-1 rounded border bg-white hover:bg-blue-50 text-sm">Próximo</button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Reports
+          pagedData={pagedData}
+          totalCount={totalCount}
+          loading={loading}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onChangePageSize={handleChangePageSize}
+          onPrevPage={handlePrevPage}
+          onNextPage={handleNextPage}
+          onExportAll={handleExportAll}
+          exportLoading={exportLoading}
+          exportProgress={exportProgress}
+          buildFiltersForRequest={buildFiltersForRequest}
+        />
       )}
     </div>
   );

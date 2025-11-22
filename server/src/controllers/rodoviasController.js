@@ -366,6 +366,51 @@ const getIndicadores = async (req, res) => {
       ORDER BY nome_dia_semana
     `;
 
+    const porCondicaoMeterologicaQuery = `
+      SELECT
+        condicao_metereologica,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY condicao_metereologica
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    const porMarcasQuery = `
+      SELECT
+        marcas,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      ${whereSQL ? 'AND' : 'WHERE'} marcas IS NOT NULL AND marcas != ''
+      GROUP BY marcas
+      ORDER BY total DESC
+      LIMIT 15
+    `;
+
+    const porModeloVeiculoQuery = `
+      SELECT
+        modelo_veiculo,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      ${whereSQL ? 'AND' : 'WHERE'} modelo_veiculo IS NOT NULL AND modelo_veiculo != ''
+      GROUP BY modelo_veiculo
+      ORDER BY total DESC
+      LIMIT 15
+    `;
+
+    const porTipoPistaQuery = `
+      SELECT
+        tipo_pista,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY tipo_pista
+      ORDER BY total DESC
+    `;
+
     const indicadorParam = req.query.indicador || 'all';
 
     const queries = {};
@@ -399,6 +444,22 @@ const getIndicadores = async (req, res) => {
       queries.porDiaSemana = db.query(porDiaSemanaQuery, queryParams);
       order.push('porDiaSemana');
     }
+    if (indicadorParam === 'all' || indicadorParam === 'condicao_metereologica') {
+      queries.porCondicaoMeterologica = db.query(porCondicaoMeterologicaQuery, queryParams);
+      order.push('porCondicaoMeterologica');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'marcas') {
+      queries.porMarcas = db.query(porMarcasQuery, queryParams);
+      order.push('porMarcas');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'modelo_veiculo') {
+      queries.porModeloVeiculo = db.query(porModeloVeiculoQuery, queryParams);
+      order.push('porModeloVeiculo');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'tipo_pista') {
+      queries.porTipoPista = db.query(porTipoPistaQuery, queryParams);
+      order.push('porTipoPista');
+    }
 
     const resultsArray = await Promise.all(Object.values(queries));
 
@@ -421,7 +482,11 @@ const getIndicadores = async (req, res) => {
       acidentes_por_tipo: results.porTipo?.rows || [],
       acidentes_por_categoria: results.porCategoria?.rows || [],
       acidentes_por_uf: results.porUf?.rows || [],
-      acidentes_por_dia_semana: results.porDiaSemana?.rows || []
+      acidentes_por_dia_semana: results.porDiaSemana?.rows || [],
+      acidentes_por_condicao_metereologica: results.porCondicaoMeterologica?.rows || [],
+      acidentes_por_marcas: results.porMarcas?.rows || [],
+      acidentes_por_modelo_veiculo: results.porModeloVeiculo?.rows || [],
+      acidentes_por_tipo_pista: results.porTipoPista?.rows || []
     });
 
   } catch (error) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { TrendingDown, TrendingUp, LucideIcon } from 'lucide-react';
-import { Card, CardContent } from './ui/card';
+import { Card, CardContent } from './card';
 
 interface StatCardProps {
   title: string;

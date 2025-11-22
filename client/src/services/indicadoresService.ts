@@ -41,6 +41,26 @@ export interface AcidentePorDiaSemana {
   total: number;
 }
 
+export interface AcidentePorCondicaoMeterologica {
+  condicao_metereologica: string;
+  total: number;
+}
+
+export interface AcidentePorMarcas {
+  marcas: string;
+  total: number;
+}
+
+export interface AcidentePorModeloVeiculo {
+  modelo_veiculo: string;
+  total: number;
+}
+
+export interface AcidentePorTipoPista {
+  tipo_pista: string;
+  total: number;
+}
+
 export interface IndicadoresResponse {
   indicadores_gerais: IndicadoresGerais;
   acidentes_por_mes: AcidentePorMes[];
@@ -49,6 +69,10 @@ export interface IndicadoresResponse {
   acidentes_por_categoria: AcidentePorCategoria[];
   acidentes_por_uf: AcidentePorUf[];
   acidentes_por_dia_semana: AcidentePorDiaSemana[];
+  acidentes_por_condicao_metereologica: AcidentePorCondicaoMeterologica[];
+  acidentes_por_marcas: AcidentePorMarcas[];
+  acidentes_por_modelo_veiculo: AcidentePorModeloVeiculo[];
+  acidentes_por_tipo_pista: AcidentePorTipoPista[];
 }
 
 export interface IndicadoresFilters {
