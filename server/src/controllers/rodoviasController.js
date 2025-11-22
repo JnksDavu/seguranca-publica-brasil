@@ -1,18 +1,18 @@
 const db = require('../config/db');
 
-const getRodovias = async (req, res) => {
-  const filterMap = {
-    ano: 'ano',
-    uf: 'uf_abrev',
-    categoria_acidente: 'categoria_acidente',
-    municipio: 'municipio',
-    mes: 'nome_mes',
-    nome_dia_semana: 'nome_dia_semana',
-    flag_fim_de_semana: 'flag_fim_de_semana',
-    tipo_acidente: 'tipo_acidente',
-    causa_acidente: 'causa_acidente',
-  };
+const filterMap = {
+  ano: 'ano',
+  uf: 'uf_abrev',
+  categoria_acidente: 'categoria_acidente',
+  municipio: 'municipio',
+  mes: 'nome_mes',
+  nome_dia_semana: 'nome_dia_semana',
+  flag_fim_de_semana: 'flag_fim_de_semana',
+  tipo_acidente: 'tipo_acidente',
+  causa_acidente: 'causa_acidente',
+};
 
+const getRodovias = async (req, res) => {
   const filters = req.query;
   const whereClauses = [];
   const queryParams = [];
@@ -129,18 +129,6 @@ const getRodoviaById = async (req, res) => {
 
 
 const exportRodovias = async (req, res) => {
-  const filterMap = {
-    ano: 'ano',
-    uf: 'uf_abrev',
-    categoria_acidente: 'categoria_acidente',
-    municipio: 'municipio',
-    mes: 'nome_mes',
-    nome_dia_semana: 'nome_dia_semana',
-    flag_fim_de_semana: 'flag_fim_de_semana',
-    tipo_acidente: 'tipo_acidente',
-    causa_acidente: 'causa_acidente',
-  };
-
   const filters = { ...req.query, ...req.body };
   const whereClauses = [];
   const queryParams = [];
@@ -259,17 +247,6 @@ const exportRodovias = async (req, res) => {
 };
 // Endpoint para indicadores agregados (cards + gráficos)
 const getIndicadores = async (req, res) => {
-  const filterMap = {
-    ano: 'ano',
-    uf: 'uf_abrev',
-    categoria_acidente: 'categoria_acidente',
-    municipio: 'municipio',
-    mes: 'nome_mes',
-    nome_dia_semana: 'nome_dia_semana',
-    flag_fim_de_semana: 'flag_fim_de_semana',
-    tipo_acidente: 'tipo_acidente',
-    causa_acidente: 'causa_acidente',
-  };
 
   const filters = req.query;
   const whereClauses = [];
