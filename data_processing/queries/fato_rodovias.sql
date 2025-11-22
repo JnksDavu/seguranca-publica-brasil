@@ -1,5 +1,3 @@
-
-
 INSERT INTO Silver.fato_rodovias (
     id_acidente_bronze,
     
@@ -104,36 +102,17 @@ SELECT
         THEN b.pesid
     END) AS total_pessoas,
 
-    COUNT(DISTINCT CASE
-        WHEN b.pesid IS NOT NULL AND b.estado_fisico = 'Ileso'
-        THEN b.pesid
-    END) AS total_ilesos,
+    sum(b.ilesos) AS total_ilesos,
 
-    COUNT(DISTINCT CASE
-        WHEN b.pesid IS NOT NULL AND b.estado_fisico = 'Lesões Leves'
-        THEN b.pesid
-    END) AS total_feridos_leves,
+    sum(b.feridos_leves) AS total_feridos_leves,
 
-    COUNT(DISTINCT CASE
-        WHEN b.pesid IS NOT NULL AND b.estado_fisico = 'Lesões Graves'
-        THEN b.pesid
-    END) AS total_feridos_graves,
+    sum(b.feridos_graves) AS total_feridos_graves,
     
-    COUNT(DISTINCT CASE 
-    WHEN b.pesid IS NOT NULL AND b.estado_fisico IN ('Lesões Leves','Lesões Graves')
-    THEN b.pesid
-END) AS total_feridos,
+    sum(b.mortos) AS total_mortos,
+    
+	sum(b.feridos_leves) + sum(b.feridos_graves) AS total_feridos,
 
-    COUNT(DISTINCT CASE
-        WHEN b.pesid IS NOT NULL AND b.estado_fisico = 'Óbito'
-        THEN b.pesid
-    END) AS total_mortos,
-
-    COUNT(DISTINCT CASE
-        WHEN b.pesid IS NOT NULL 
-        AND b.estado_fisico NOT IN ('Ileso','Lesões Leves','Lesões Graves','Óbito')
-        THEN b.pesid
-    END) AS total_ignorados,
+    sum(b.ignorados) AS total_ignorados,
     b.sentido_via,
     b.fase_dia,
     b.condicao_metereologica,

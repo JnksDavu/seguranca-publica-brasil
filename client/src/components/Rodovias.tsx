@@ -7,7 +7,7 @@ import { StatCard } from './StatCard';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Info } from 'lucide-react';
+import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Info, Skull, Bandage, Route } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -487,7 +487,7 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.total_mortos?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'down' as const,
-      icon: AlertCircle,
+      icon: Skull,
       color: 'text-red-600',
       bgColor: 'bg-red-50'
     },
@@ -496,7 +496,7 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.total_feridos?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'down' as const,
-      icon: Car,
+      icon: Bandage,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
     },
@@ -505,7 +505,7 @@ export function Rodovias() {
       value: indicadores?.indicadores_gerais?.rodovias_monitoradas?.toLocaleString('pt-BR') || '0',
       change: '-',
       trend: 'up' as const,
-      icon: Navigation,
+      icon: Route,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
@@ -646,7 +646,7 @@ export function Rodovias() {
             state: selectedTipoAcidente,
             set: setSelectedTipoAcidente,
             options: tipoOptions,
-            placeholder: 'Tipo',
+            placeholder: 'Tipo do acidente',
             width: 500,
           },
           {
@@ -654,7 +654,7 @@ export function Rodovias() {
             state: selectedCausaAcidente,
             set: setSelectedCausaAcidente,
             options: causaOptions,
-            placeholder: 'Causa',
+            placeholder: 'Causa do acidente',
             width: 550,
           },
           {
@@ -662,7 +662,7 @@ export function Rodovias() {
             state: selectedCategoriaAcidente,
             set: setSelectedCategoriaAcidente,
             options: categoriaOptions,
-            placeholder: 'Categoria',
+            placeholder: 'Categoria do acidente',
             width: 450,
           },
         ].map((f, i) => (
