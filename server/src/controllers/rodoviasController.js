@@ -411,7 +411,15 @@ const getIndicadores = async (req, res) => {
     `;
 
     const porPercapita = `
-    select *
+    select 
+      uf,
+      municipio,
+      ano,
+      populacao,
+      mortos_per_capita_100k,
+      feridos_graves_per_capita_100k,
+      feridos_per_capita_100k,
+      severidade_per_capita_100k
     from gold.analytics_rodovias_percapita
     ${whereSQL}
 
