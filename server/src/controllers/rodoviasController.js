@@ -262,13 +262,27 @@ const getIndicadores = async (req, res) => {
 
     if (value.includes(',')) {
       const parts = value.split(',').map(p => p.trim()).filter(Boolean);
-      const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
-      whereClauses.push(`${column} IN (${placeholders})`);
-      queryParams.push(...parts);
+      if (parts.length === 0) continue;
+
+      if (["uf", "municipio", "mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+        const ilikeClauses = parts.map(() => `${column} ILIKE $${paramIndex++}`).join(' OR ');
+        whereClauses.push(`(${ilikeClauses})`);
+        queryParams.push(...parts);
+      } else {
+        const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
+        whereClauses.push(`${column} IN (${placeholders})`);
+        queryParams.push(...parts);
+      }
     } else {
-      whereClauses.push(`${column} = $${paramIndex}`);
-      queryParams.push(value);
-      paramIndex++;
+      if (["uf", "municipio", "mes", "nome_dia_semana", "categoria_acidente", "tipo_acidente", "causa_acidente"].includes(key)) {
+        whereClauses.push(`${column} ILIKE $${paramIndex}`);
+        queryParams.push(value);
+        paramIndex++;
+      } else {
+        whereClauses.push(`${column} = $${paramIndex}`);
+        queryParams.push(value);
+        paramIndex++;
+      }
     }
   }
 
@@ -288,6 +302,45 @@ const getIndicadores = async (req, res) => {
 
   const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
+  const percapitaAllowed = new Set(['municipio', 'uf', 'ano']);
+  const percapitaWhereClauses = [];
+  const percapitaQueryParams = [];
+  let percapitaParamIndex = 1;
+
+  for (const [key, rawValue] of Object.entries(filters)) {
+    if (!rawValue) continue;
+    if (!percapitaAllowed.has(key)) continue;
+
+    const column = filterMap[key];
+    if (!column) continue;
+
+    const value = String(rawValue);
+    if (value.includes(',')) {
+      const parts = value.split(',').map(p => p.trim()).filter(Boolean);
+      if (parts.length === 0) continue;
+
+      if (["uf", "municipio"].includes(key)) {
+        const ilikeClauses = parts.map(() => `${column} ILIKE $${percapitaParamIndex++}`).join(' OR ');
+        percapitaWhereClauses.push(`(${ilikeClauses})`);
+        percapitaQueryParams.push(...parts);
+      } else {
+        const placeholders = parts.map(() => `$${percapitaParamIndex++}`).join(', ');
+        percapitaWhereClauses.push(`${column} IN (${placeholders})`);
+        percapitaQueryParams.push(...parts);
+      }
+    } else {
+      if (["uf", "municipio"].includes(key)) {
+        percapitaWhereClauses.push(`${column} ILIKE $${percapitaParamIndex++}`);
+        percapitaQueryParams.push(value);
+      } else {
+        percapitaWhereClauses.push(`${column} = $${percapitaParamIndex++}`);
+        percapitaQueryParams.push(value);
+      }
+    }
+  }
+
+  const percapitaWhereSQL = percapitaWhereClauses.length > 0 ? `WHERE ${percapitaWhereClauses.join(' AND ')}` : '';
+
   try {
     const indicadoresQuery = `
       SELECT
@@ -296,14 +349,15 @@ const getIndicadores = async (req, res) => {
         SUM(total_feridos) AS total_feridos,
         SUM(total_feridos_graves) AS total_feridos_graves,
         SUM(total_feridos_leves) AS total_feridos_leves,
-        COUNT(DISTINCT municipio) AS rodovias_monitoradas
+        COUNT(DISTINCT br) AS rodovias_monitoradas,
+        COUNT(DISTINCT municipio) AS municipios_monitorados
       FROM gold.analytics_rodovias
       ${whereSQL}
     `;
 
     const porMesQuery = `
       SELECT
-        nome_mes AS nome_mes,
+        nome_mes,
         COUNT(*) AS total,
         SUM(total_mortos) AS mortos
       FROM gold.analytics_rodovias
@@ -421,8 +475,31 @@ const getIndicadores = async (req, res) => {
       feridos_per_capita_100k,
       severidade_per_capita_100k
     from gold.analytics_rodovias_percapita
-    ${whereSQL}
+    ${percapitaWhereSQL}
 
+    `
+    const porIdadeSexo = `
+    WITH expandido AS (
+      SELECT
+        a.*,
+        sx.sexo as sexos,
+        sx.ord_sexo,
+        id.idade as idades,
+        id.ord_idade
+      FROM gold.analytics_rodovias a
+      CROSS JOIN LATERAL unnest(string_to_array(a.sexo, ',')) WITH ORDINALITY AS sx(sexo, ord_sexo)
+      CROSS JOIN LATERAL unnest(string_to_array(a.idade, ',')) WITH ORDINALITY AS id(idade, ord_idade)
+    )
+    SELECT
+      -- Quantidade de feridos mulheres / homens
+      SUM(CASE WHEN TRIM(sexos) = 'Feminino' THEN 1 ELSE 0 END) AS mulheres_envolvidas,
+      SUM(CASE WHEN TRIM(sexos) = 'Masculino' THEN 1 ELSE 0 END) AS homens_envolvidos,
+
+      -- Média de idade
+      round(AVG(NULLIF(TRIM(idades)::int, 0)),0) AS media_idade_feridos
+
+    FROM expandido
+    ${whereSQL} ${whereSQL ? 'AND' : 'WHERE'} ord_sexo = ord_idade;
     `
 
     const indicadorParam = req.query.indicador || 'all';
@@ -474,8 +551,12 @@ const getIndicadores = async (req, res) => {
       queries.porTipoPista = db.query(porTipoPistaQuery, queryParams);
       order.push('porTipoPista');
     }
+    if (indicadorParam === 'all' || indicadorParam === 'idade_sexo') {
+      queries.porIdadeSexo = db.query(porIdadeSexo, queryParams);
+      order.push('porIdadeSexo');
+    }
     if (indicadorParam === 'all' || indicadorParam === 'percapita') {
-      queries.porPercapita = db.query(porPercapita, queryParams);
+      queries.porPercapita = db.query(porPercapita, percapitaQueryParams);
       order.push('porPercapita');
     }
 
@@ -493,7 +574,8 @@ const getIndicadores = async (req, res) => {
         total_feridos: 0,
         total_feridos_graves: 0,
         total_feridos_leves: 0,
-        rodovias_monitoradas: 0
+        rodovias_monitoradas: 0,
+        municipios_monitorados: 0
       },
       acidentes_por_mes: results.porMes?.rows || [],
       acidentes_por_causa: results.porCausa?.rows || [],
@@ -505,8 +587,12 @@ const getIndicadores = async (req, res) => {
       acidentes_por_marcas: results.porMarcas?.rows || [],
       acidentes_por_modelo_veiculo: results.porModeloVeiculo?.rows || [],
       acidentes_por_tipo_pista: results.porTipoPista?.rows || [],
-      acidentes_por_percapita: results.porPercapita?.rows || []
-
+      acidentes_por_percapita: results.porPercapita?.rows || [],
+      acidentes_por_idade_sexo: results.porIdadeSexo && results.porIdadeSexo.rows && results.porIdadeSexo.rows[0] ? results.porIdadeSexo.rows[0] : {
+        mulheres_envolvidas: 0,
+        homens_envolvidos: 0,
+        media_idade_feridos: 0
+      }
     });
 
   } catch (error) {

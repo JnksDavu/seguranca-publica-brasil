@@ -64,7 +64,6 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
     }));
 
 
-  // Preparar dados para heatmap de UF (longitude/latitude agregado)
   const ufData = (indicadores?.acidentes_por_uf || []).map((item) => ({
     uf: item.uf_abrev || '',
     total: item.total || 0,

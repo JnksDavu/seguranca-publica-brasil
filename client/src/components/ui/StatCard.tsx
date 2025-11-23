@@ -6,8 +6,6 @@ import { Card, CardContent } from './card';
 interface StatCardProps {
   title: string;
   value: string | number;
-  change?: string;
-  trend?: 'up' | 'down';
   icon: LucideIcon;
   color: string;
   bgColor: string;
@@ -17,8 +15,6 @@ interface StatCardProps {
 export function StatCard({
   title,
   value,
-  change,
-  trend = 'down',
   icon: Icon,
   color,
   bgColor,
@@ -29,7 +25,8 @@ export function StatCard({
       whileHover={{ scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      <Card className={`border-0 shadow-lg ${bgColor} overflow-hidden`}>
+      <Card className={`border-0 shadow-lg overflow-hidden`} style={{ backgroundColor: bgColor }}>
+
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -42,20 +39,6 @@ export function StatCard({
                     <h3 className="text-3xl font-bold text-gray-900">
                       {value}
                     </h3>
-                    {change && (
-                      <span
-                        className={`text-sm font-semibold flex items-center gap-1 ${
-                          trend === 'up' ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {trend === 'up' ? (
-                          <TrendingUp className="w-4 h-4" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4" />
-                        )}
-                        {change}
-                      </span>
-                    )}
                   </>
                 )}
               </div>

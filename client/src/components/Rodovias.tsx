@@ -8,7 +8,7 @@ import { Reports } from './RodoviasComponents/Reports';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2 } from 'lucide-react';
+import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Skull, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import Select from 'react-select';
 
@@ -409,39 +409,60 @@ export function Rodovias() {
     {
       title: 'Total de Acidentes',
       value: indicadores?.indicadores_gerais?.total_acidentes?.toLocaleString('pt-BR') || '0',
-      change: '-',
-      trend: 'down' as const,
       icon: AlertCircle,
       color: 'text-orange-600',
-      bgColor: 'bg-orange-50'
+      bgColor: '#dfe9ffff'
     },
     {
       title: 'Vítimas Fatais',
       value: indicadores?.indicadores_gerais?.total_mortos?.toLocaleString('pt-BR') || '0',
-      change: '-',
-      trend: 'down' as const,
-      icon: AlertCircle,
+      icon: Skull,
       color: 'text-red-600',
-      bgColor: 'bg-red-50'
+      bgColor: '#ddf3ffff'
     },
     {
       title: 'Feridos',
       value: indicadores?.indicadores_gerais?.total_feridos?.toLocaleString('pt-BR') || '0',
-      change: '-',
-      trend: 'down' as const,
-      icon: AlertCircle,
+      icon: ShieldAlert,
       color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50'
+      bgColor: '#dfe9ffff'
+    },
+    {
+      title: 'Feridos Graves',
+      value: indicadores?.indicadores_gerais?.total_feridos_graves?.toLocaleString('pt-BR') || '0',
+      icon: CircleAlert,
+      color: 'text-blue-600',
+      bgColor: '#ddf3ffff'
+    },
+    {
+      title: 'Feridos Leves',
+      value: indicadores?.indicadores_gerais?.total_feridos_leves?.toLocaleString('pt-BR') || '0',
+      icon: Bandage,
+      color: 'text-blue-600',
+      bgColor: '#ddf3ffff'
     },
     {
       title: 'Rodovias Monitoradas',
       value: indicadores?.indicadores_gerais?.rodovias_monitoradas?.toLocaleString('pt-BR') || '0',
-      change: '-',
-      trend: 'up' as const,
-      icon: Navigation,
+      icon: Route,
       color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      bgColor: '#dfe9ffff'
     },
+    {
+      title: 'Municípios Monitorados',
+      value: indicadores?.indicadores_gerais?.municipios_monitorados?.toLocaleString('pt-BR') || '0',
+      icon: MapPinned,
+      color: 'text-blue-600',
+      bgColor: '#ddf3ffff'
+    },
+    {
+      title: 'Média idade envolvidos',
+      value: indicadores?.acidentes_por_idade_sexo?.media_idade_feridos?.toLocaleString('pt-BR') || '0',
+      trend: 'up' as const,
+      icon: UsersRound,
+      color: 'text-blue-600',
+      bgColor: '#dfe9ffff'
+    }
   ];
 
   return (
@@ -683,24 +704,24 @@ export function Rodovias() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statsCards.map((stat, i) => (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <StatCard
-                  title={stat.title}
-                  value={stat.value}
-                  change={stat.change}
-                  trend={stat.trend as 'up' | 'down'}
-                  icon={stat.icon}
-                  color={stat.color}
-                  bgColor={stat.bgColor}
-                  loading={indicadoresLoading}
-                />
-              </motion.div>
-            ))}
+        <motion.div
+          key={stat.title}
+          className="w-full min-w-0"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1 }}
+        >
+          <StatCard
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+            bgColor={stat.bgColor}
+            loading={indicadoresLoading}
+          />
+        </motion.div>
+      ))}
+
           </div>
           
           <Charts indicadores={indicadores} indicadoresLoading={indicadoresLoading} />

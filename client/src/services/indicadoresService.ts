@@ -7,6 +7,13 @@ export interface IndicadoresGerais {
   total_feridos_graves: number;
   total_feridos_leves: number;
   rodovias_monitoradas: number;
+  municipios_monitorados: number;
+}
+
+export interface AcidentesPorIdadeSexo {
+  mulheres_envolvidas: number;
+  homens_envolvidos: number;
+  media_idade_feridos: number;
 }
 
 export interface AcidentePorMes {
@@ -73,6 +80,7 @@ export interface IndicadoresResponse {
   acidentes_por_marcas: AcidentePorMarcas[];
   acidentes_por_modelo_veiculo: AcidentePorModeloVeiculo[];
   acidentes_por_tipo_pista: AcidentePorTipoPista[];
+  acidentes_por_idade_sexo: AcidentesPorIdadeSexo;
 }
 
 export interface IndicadoresFilters {
