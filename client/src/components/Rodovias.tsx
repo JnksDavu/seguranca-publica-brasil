@@ -5,7 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { StatCard } from './ui/StatCard';
 import { Charts } from './RodoviasComponents/Charts';
 import { Reports } from './RodoviasComponents/Reports';
-import HeatmapBrasil from './HeatmapBrasil';
+import MapaAnaliticoHex from './MapaAnaliticoHex';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
@@ -760,7 +760,7 @@ export function Rodovias() {
       )}
 
       {viewMode === 'heatmap' && (
-        <HeatmapBrasil
+        <MapaAnaliticoHex
           dados={indicadores?.acidentes_por_localizacao || []}
           carregando={indicadoresLoading}
         />
