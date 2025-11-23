@@ -5,10 +5,11 @@ import { useDebounce } from '../hooks/useDebounce';
 import { StatCard } from './ui/StatCard';
 import { Charts } from './RodoviasComponents/Charts';
 import { Reports } from './RodoviasComponents/Reports';
+import HeatmapBrasil from './HeatmapBrasil';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Skull, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound } from 'lucide-react';
+import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Skull, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound, Thermometer } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import Select from 'react-select';
 
@@ -35,7 +36,7 @@ export function Rodovias() {
   const [indicadores, setIndicadores] = useState<IndicadoresResponse | null>(null);
   const [indicadoresLoading, setIndicadoresLoading] = useState(false);
 
-  const [viewMode, setViewMode] = useState<'graficos' | 'relatorio'>('graficos');
+  const [viewMode, setViewMode] = useState<'graficos' | 'relatorio' | 'heatmap'>('graficos');
 
   const [pageSize, setPageSize] = useState<number>(100);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -696,6 +697,18 @@ export function Rodovias() {
             <FileText className="w-5 h-5" />
             Relatório
           </button>
+
+          <button
+            onClick={() => setViewMode('heatmap')}
+            className={`flex items-center gap-2 px-6 py-6 rounded-md text-base transition ${
+              viewMode === 'heatmap'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            <Thermometer className="w-5 h-5" />
+            Mapa de Calor
+          </button>
         </div>
       </div>
 
@@ -743,6 +756,13 @@ export function Rodovias() {
           exportLoading={exportLoading}
           exportProgress={exportProgress}
           buildFiltersForRequest={buildFiltersForRequest}
+        />
+      )}
+
+      {viewMode === 'heatmap' && (
+        <HeatmapBrasil
+          dados={indicadores?.acidentes_por_localizacao || []}
+          carregando={indicadoresLoading}
         />
       )}
     </div>

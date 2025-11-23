@@ -78,6 +78,18 @@ export interface AcidentePorBr {
   total: number;
 }
 
+export interface LocalizacaoAcidente {
+  longitude: number;
+  latitude: number;
+  municipio?: string;
+  uf_abrev?: string; // novo campo vindo da query agregada
+  total_acidentes: number;
+  total_mortos: number;
+  total_feridos: number;
+  total_feridos_graves: number;
+  total_feridos_leves: number;
+}
+
 export interface IndicadoresResponse {
   indicadores_gerais: IndicadoresGerais;
   acidentes_por_mes: AcidentePorMes[];
@@ -92,6 +104,7 @@ export interface IndicadoresResponse {
   acidentes_por_tipo_pista: AcidentePorTipoPista[];
   acidentes_por_tipo_veiculo: AcidentePorTipoVeiculo[];
   acidentes_por_br: AcidentePorBr[];
+  acidentes_por_localizacao: LocalizacaoAcidente[];
   acidentes_por_idade_sexo: AcidentesPorIdadeSexo;
 }
 
@@ -138,11 +151,16 @@ export async function fetchIndicadores(filters: IndicadoresFilters = {}): Promis
   const cacheKey = generateCacheKey(cleanFilters);
   const now = Date.now();
 
-  // Verificar cache
+  // Verificar cache (lazy schema validation)
   const cached = indicadoresCache.get(cacheKey);
   if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
-    console.log('[Cache HIT] Usando indicadores do cache');
-    return cached.data;
+    const hasMunicipio = Array.isArray(cached.data?.acidentes_por_localizacao) && cached.data.acidentes_por_localizacao.length > 0 && 'municipio' in cached.data.acidentes_por_localizacao[0];
+    if (hasMunicipio) {
+      console.log('[Cache HIT] Usando indicadores do cache');
+      return cached.data;
+    } else {
+      console.log('[Cache BYPASS] Schema atualizado, refazendo fetch');
+    }
   }
 
   // Requisição ao servidor

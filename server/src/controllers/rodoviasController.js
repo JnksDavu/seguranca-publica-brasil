@@ -498,8 +498,22 @@ const getIndicadores = async (req, res) => {
       severidade_per_capita_100k
     from gold.analytics_rodovias_percapita
     ${percapitaWhereSQL}
-
     `
+
+    const porLocalizacao = `
+    SELECT
+      longitude,
+      latitude,
+      COUNT(*) AS total_acidentes,
+      SUM(total_mortos) AS total_mortos,
+      SUM(total_feridos) AS total_feridos,
+      SUM(total_feridos_graves) AS total_feridos_graves,
+      SUM(total_feridos_leves) AS total_feridos_leves
+    FROM gold.analytics_rodovias
+    ${whereSQL}
+    GROUP BY longitude, latitude
+    ORDER BY total_acidentes DESC
+    `;
     const porIdadeSexo = `
     WITH expandido AS (
       SELECT
@@ -585,6 +599,10 @@ const getIndicadores = async (req, res) => {
       queries.porBr = db.query(porBr, queryParams);
       order.push('porBr');
     }
+    if (indicadorParam === 'all' || indicadorParam === 'localizacao') {
+      queries.porLocalizacao = db.query(porLocalizacao, queryParams);
+      order.push('porLocalizacao');
+    }
     if (indicadorParam === 'all' || indicadorParam === 'percapita') {
       queries.porPercapita = db.query(porPercapita, percapitaQueryParams);
       order.push('porPercapita');
@@ -619,6 +637,7 @@ const getIndicadores = async (req, res) => {
       acidentes_por_tipo_pista: results.porTipoPista?.rows || [],
       acidentes_por_tipo_veiculo: results.porTipoVeiculo?.rows || [],
       acidentes_por_br: results.porBr?.rows || [],
+      acidentes_por_localizacao: results.porLocalizacao?.rows || [],
       acidentes_por_percapita: results.porPercapita?.rows || [],
       acidentes_por_idade_sexo: results.porIdadeSexo && results.porIdadeSexo.rows && results.porIdadeSexo.rows[0] ? results.porIdadeSexo.rows[0] : {
         mulheres_envolvidas: 0,
