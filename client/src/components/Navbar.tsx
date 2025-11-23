@@ -8,10 +8,11 @@ interface NavbarProps {
 
 export function Navbar({ currentPage, onPageChange }: NavbarProps) {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'rodovias', label: 'Rodovias', icon: Car },
     { id: 'ocorrencias', label: 'Ocorrências', icon: AlertCircle },
     { id: 'presidios', label: 'Presídios', icon: Building2 },
+    { id: 'fontes', label: 'Fontes', icon: Building2 },
+    { id: 'API', label: 'API', icon: Building2 }
   ];
 
   return (
@@ -23,7 +24,7 @@ export function Navbar({ currentPage, onPageChange }: NavbarProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-3 cursor-pointer"
-            onClick={() => onPageChange('dashboard')}
+            onClick={() => onPageChange('rodovias')}
           >
             <motion.img
               src="/logo_seguranca_brasil.png"
