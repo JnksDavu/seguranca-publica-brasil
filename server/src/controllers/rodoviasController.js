@@ -303,7 +303,7 @@ const getIndicadores = async (req, res) => {
 
     const porMesQuery = `
       SELECT
-        nome_mes,
+        nome_mes AS nome_mes,
         COUNT(*) AS total,
         SUM(total_mortos) AS mortos
       FROM gold.analytics_rodovias
