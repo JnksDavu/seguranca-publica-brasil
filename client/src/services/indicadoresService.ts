@@ -68,6 +68,16 @@ export interface AcidentePorTipoPista {
   total: number;
 }
 
+export interface AcidentePorTipoVeiculo {
+  tipo_veiculo: string;
+  total: number;
+}
+
+export interface AcidentePorBr {
+  br: string;
+  total: number;
+}
+
 export interface IndicadoresResponse {
   indicadores_gerais: IndicadoresGerais;
   acidentes_por_mes: AcidentePorMes[];
@@ -80,6 +90,8 @@ export interface IndicadoresResponse {
   acidentes_por_marcas: AcidentePorMarcas[];
   acidentes_por_modelo_veiculo: AcidentePorModeloVeiculo[];
   acidentes_por_tipo_pista: AcidentePorTipoPista[];
+  acidentes_por_tipo_veiculo: AcidentePorTipoVeiculo[];
+  acidentes_por_br: AcidentePorBr[];
   acidentes_por_idade_sexo: AcidentesPorIdadeSexo;
 }
 

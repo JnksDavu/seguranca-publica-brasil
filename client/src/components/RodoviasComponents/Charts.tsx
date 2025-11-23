@@ -95,6 +95,20 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
       total: item.total || 0,
     }));
 
+    const TypeVeiculesData = (indicadores?.acidentes_por_tipo_veiculo || [])
+    .slice(0, 12)
+    .map((item) => ({
+      brand: item.tipo_veiculo || 'Desconhecida',
+      total: item.total || 0,
+    }));
+
+    const BrData = (indicadores?.acidentes_por_br || [])
+    .slice(0, 12)
+    .map((item) => ({
+      brand: item.br || 'Desconhecida',
+      total: item.total || 0,
+    }));
+
   const modelData = (indicadores?.acidentes_por_modelo_veiculo || [])
     .slice(0, 12)
     .map((item) => ({
@@ -180,7 +194,7 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (indicadores?.acidentes_por_tipo?.length || 0) * 25)}>
+              <ResponsiveContainer width="100%" height={Math.max(250, (indicadores?.acidentes_por_tipo?.length || 0) * 45)}>
                 <BarChart data={indicadores?.acidentes_por_tipo || []} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis
@@ -215,7 +229,8 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (indicadores?.acidentes_por_categoria?.length || 0) * 25)}>
+              <ResponsiveContainer width="100%" 
+              height={Math.max(250, (indicadores?.acidentes_por_categoria?.length || 0) * 55)}>
                 <BarChart data={indicadores?.acidentes_por_categoria || []} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis
@@ -354,6 +369,41 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
         </Card>
       </motion.div>
 
+      {/* Acidentes por Tipo de Veiculo */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+        <Card className="border-blue-200 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por tipo de veiculo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-y-auto max-h-72 pr-4">
+              <ResponsiveContainer width="100%" height={Math.max(250, (TypeVeiculesData?.length || 0) * 52)}>
+                <BarChart data={TypeVeiculesData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#5784E6" />
+                  <XAxis
+                    type="number"
+                    stroke="#5784E6"
+                    domain={[0, maxCauseValue * 0.9]}
+                  />
+                  <YAxis 
+                    dataKey="brand" 
+                    type="category" 
+                    width={170} 
+                    stroke="#5784E6"
+                    tick={{ fontSize: 14 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
+                    formatter={(value) => value.toLocaleString('pt-BR')}
+                  />
+                  <Bar dataKey="total" fill="#5784E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Acidentes por Marca de Carro */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
@@ -362,7 +412,7 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (brandsData?.length || 0) * 22)}>
+              <ResponsiveContainer width="100%" height={Math.max(250, (brandsData?.length || 0) * 52)}>
                 <BarChart data={brandsData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#5757E6" />
                   <XAxis
@@ -397,7 +447,7 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (modelData?.length || 0) * 22)}>
+              <ResponsiveContainer width="100%" height={Math.max(250, (modelData?.length || 0) * 52)}>
                 <BarChart data={modelData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis
@@ -417,6 +467,41 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
                     formatter={(value) => value.toLocaleString('pt-BR')}
                   />
                   <Bar dataKey="total" fill="#8657E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Acidentes por Br */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+        <Card className="border-blue-200 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Br</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-y-auto max-h-72 pr-4">
+              <ResponsiveContainer width="100%" height={Math.max(250, (BrData?.length || 0) * 42)}>
+                <BarChart data={BrData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#5784E6" />
+                  <XAxis
+                    type="number"
+                    stroke="#5784E6"
+                    domain={[0, maxCauseValue * 0.9]}
+                  />
+                  <YAxis 
+                    dataKey="brand" 
+                    type="category" 
+                    width={170} 
+                    stroke="#5784E6"
+                    tick={{ fontSize: 14 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
+                    formatter={(value) => value.toLocaleString('pt-BR')}
+                  />
+                  <Bar dataKey="total" fill="#5784E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -388,6 +388,28 @@ const getIndicadores = async (req, res) => {
       LIMIT 10
     `;
 
+    const porBr = `
+      SELECT
+        br,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY br
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    const porTipoVeiculo = `
+      SELECT
+        tipo_veiculo,
+        COUNT(*) AS total
+      FROM gold.analytics_rodovias
+      ${whereSQL}
+      GROUP BY tipo_veiculo
+      ORDER BY total DESC
+      LIMIT 15
+    `;
+
     const porCategoriaQuery = `
       SELECT
         categoria_acidente,
@@ -555,6 +577,14 @@ const getIndicadores = async (req, res) => {
       queries.porIdadeSexo = db.query(porIdadeSexo, queryParams);
       order.push('porIdadeSexo');
     }
+    if (indicadorParam === 'all' || indicadorParam === 'tipo_veiculo') {
+      queries.porTipoVeiculo = db.query(porTipoVeiculo, queryParams);
+      order.push('porTipoVeiculo');
+    }
+    if (indicadorParam === 'all' || indicadorParam === 'br') {
+      queries.porBr = db.query(porBr, queryParams);
+      order.push('porBr');
+    }
     if (indicadorParam === 'all' || indicadorParam === 'percapita') {
       queries.porPercapita = db.query(porPercapita, percapitaQueryParams);
       order.push('porPercapita');
@@ -587,6 +617,8 @@ const getIndicadores = async (req, res) => {
       acidentes_por_marcas: results.porMarcas?.rows || [],
       acidentes_por_modelo_veiculo: results.porModeloVeiculo?.rows || [],
       acidentes_por_tipo_pista: results.porTipoPista?.rows || [],
+      acidentes_por_tipo_veiculo: results.porTipoVeiculo?.rows || [],
+      acidentes_por_br: results.porBr?.rows || [],
       acidentes_por_percapita: results.porPercapita?.rows || [],
       acidentes_por_idade_sexo: results.porIdadeSexo && results.porIdadeSexo.rows && results.porIdadeSexo.rows[0] ? results.porIdadeSexo.rows[0] : {
         mulheres_envolvidas: 0,
