@@ -11,11 +11,10 @@ const options = {
       description: "Documentação da API",
     },
   },
-
   apis: [
-    path.join(__dirname, "*.swagger.js"),    // Documentação separada
-    path.join(__dirname, "../routes/*.js"),  //Rotas
-    path.join(__dirname, "../controllers/*.js") // Controller
+    path.join(__dirname, "*.swagger.js"),
+    path.join(__dirname, "../routes/*.js"),
+    path.join(__dirname, "../controllers/*.js"),
   ],
 };
 

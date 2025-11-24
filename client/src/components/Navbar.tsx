@@ -1,4 +1,4 @@
-import { Shield, Activity, Car, AlertCircle, Building2 } from 'lucide-react';
+import { Shield, Activity, Car, AlertCircle, Building2, Database, BookOpenText } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface NavbarProps {
@@ -11,8 +11,8 @@ export function Navbar({ currentPage, onPageChange }: NavbarProps) {
     { id: 'rodovias', label: 'Rodovias', icon: Car },
     { id: 'ocorrencias', label: 'Ocorrências', icon: AlertCircle },
     { id: 'presidios', label: 'Presídios', icon: Building2 },
-    { id: 'fontes', label: 'Fontes', icon: Building2 },
-    { id: 'API', label: 'API', icon: Building2 }
+    { id: 'fontes', label: 'Fontes', icon: BookOpenText },
+    { id: 'acesso aos dados', label: 'Acesso aos dados', icon: Database }
   ];
 
   return (
