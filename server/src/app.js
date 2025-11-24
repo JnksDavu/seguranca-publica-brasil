@@ -6,6 +6,7 @@ const authMiddleware = require('./middlewares/auth');
 const authRoutes = require('./routes/auth');
 const rodoviasRoutes = require('./routes/rodovias');
 const dimensoesRoutes = require('./routes/dimensoes');
+const ocorrenciasRoutes = require('./routes/ocorrenciasController');
 
 const app = express();
 
@@ -31,5 +32,6 @@ app.use('/api/auth', authRoutes);
 app.use(authMiddleware);
 app.use('/api/rodovias', rodoviasRoutes);
 app.use('/api/dimensoes', dimensoesRoutes);
+app.use('/api/ocorrencias', ocorrenciasRoutes)
 
 module.exports = app;

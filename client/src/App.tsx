@@ -4,7 +4,7 @@ import { Rodovias } from './components/Rodovias';
 
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('rodovias');
 
   const renderPage = () => {
     switch (currentPage) {

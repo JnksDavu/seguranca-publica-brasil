@@ -5,5 +5,6 @@ const dimensoesController = require('../controllers/dimensoesController');
 router.get('/calendario', dimensoesController.getCalendario);
 router.get('/localidade', dimensoesController.getLocalidade);
 router.get('/tipoAcidente', dimensoesController.getTipoAcidente);
+router.get('/crime', dimensoesController.getCrime);
 
 module.exports = router;
