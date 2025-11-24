@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Rodovias } from './components/Rodovias';
-
+import { Ocorrencias } from './components/Ocorrencias'; // novo
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('rodovias');
@@ -12,7 +12,8 @@ export default function App() {
         return <Rodovias />;
       case 'ocorrencias':
         return <Ocorrencias />;
-      case 'presidios':
+      default:
+        return <Rodovias />;
     }
   };
 

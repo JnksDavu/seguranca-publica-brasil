@@ -6,7 +6,7 @@ const authMiddleware = require('./middlewares/auth');
 const authRoutes = require('./routes/auth');
 const rodoviasRoutes = require('./routes/rodovias');
 const dimensoesRoutes = require('./routes/dimensoes');
-const ocorrenciasRoutes = require('./routes/ocorrenciasController');
+const ocorrenciasRoutes = require('./routes/ocorrencias');
 
 const app = express();
 

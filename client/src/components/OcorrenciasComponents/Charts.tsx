@@ -267,8 +267,8 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={monthlyAccidents}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="month" stroke="#3b82f6" angle={-45} textAnchor="end" domain={[0, maxCauseValue * 6.0]} />
-                <YAxis stroke="#3b82f6" domain={[0, maxCauseValue * 1.5]}/>
+                <XAxis dataKey="month" stroke="#3b82f6" angle={-45} textAnchor="end" height={80} />
+                <YAxis stroke="#3b82f6" />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
                   cursor={{ strokeDasharray: '3 3' }}
@@ -309,8 +309,8 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={ufData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="uf" stroke="#3b82f6"/>
-                <YAxis stroke="#3b82f6" domain={[0, maxCauseValue * 1.5]} />
+                <XAxis dataKey="uf" stroke="#3b82f6" />
+                <YAxis stroke="#3b82f6" />
                 <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
                 <Legend />
                 <Bar dataKey="total" fill="#06b6d4" name="Total de Acidentes" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#06b6d4', fontSize: 12 }} />
@@ -359,7 +359,7 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
                 <YAxis
                   type="number"
                   stroke="#3b82f6"
-                  domain={[0, maxCauseValue * 7.1]}
+                  domain={[0, maxCauseValue * 6.1]}
                 />
                 <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
                 <Bar dataKey="total" fill="#1E75A7" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#1E75A7', fontSize: 12 }} />
@@ -520,7 +520,7 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
               <BarChart data={roadTypeData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                 <XAxis dataKey="type" angle={-45} textAnchor="end" height={80} stroke="#1e75a7" />
-                <YAxis stroke="#1e75a7" domain={[0, maxCauseValue * 6.5]} />
+                <YAxis stroke="#1e75a7" />
                 <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
                 <Bar dataKey="total" fill="#1e75a7" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#1e75a7', fontSize: 12 }} />
               </BarChart>
