@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Rodovias } from './components/Rodovias';
 import { Ocorrencias } from './components/Ocorrencias';
 import { Acesso } from './components/Acesso';
+import { Fontes } from './components/Fontes';
 export default function App() {
   const [currentPage, setCurrentPage] = useState('rodovias');
 
@@ -12,6 +13,8 @@ export default function App() {
         return <Rodovias />;
       case 'ocorrencias':
         return <Ocorrencias />;
+      case 'fontes':
+        return <Fontes />;
       case 'acesso aos dados':
         return <Acesso />;
       default:
