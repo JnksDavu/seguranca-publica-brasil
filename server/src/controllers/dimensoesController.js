@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { query } = require('../config/db');
 
 const getCalendario = async (req, res) => {
 
@@ -9,7 +9,7 @@ const getCalendario = async (req, res) => {
     and 1 = 1
   `;
   try {
-    const result = await db.query(Query);
+    const result = await query(Query);
     res.json(result.rows);
   } catch (error) {
     console.error('Erro ao consultar dim_calendario:', error);
@@ -26,7 +26,7 @@ const getLocalidade = async (req, res) => {
     where 1 = 1
   `;
   try {
-    const result = await db.query(Query);
+    const result = await query(Query);
     res.json(result.rows);
   } catch (error) {
     console.error('Erro ao consultar dim_localidade:', error);
@@ -42,7 +42,7 @@ const getTipoAcidente = async (req, res) => {
     where 1 = 1
   `;
   try {
-    const result = await db.query(Query);
+    const result = await query(Query);
     res.json(result.rows);
   } catch (error) {
     console.error('Erro ao consultar dim_tipo_acidente:', error);
@@ -58,7 +58,7 @@ const getCrime = async (req, res) => {
     where 1 = 1
   `;
   try {
-    const result = await db.query(Query);
+    const result = await query(Query);
     res.json(result.rows);
   } catch (error) {
     console.error('Erro ao consultar dim_crime:', error);

@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { query, pool } = require('../config/db');
 
 const filterMap = {
   ano: 'ano',
@@ -78,7 +78,7 @@ const getRodovias = async (req, res) => {
       ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
     `;
 
-    const countResult = await db.query(countQuery, queryParams);
+    const countResult = await query(countQuery, queryParams);
     const total = parseInt(countResult.rows[0].total || 0);
     res.setHeader('X-Total-Count', String(total));
 
@@ -98,7 +98,7 @@ const getRodovias = async (req, res) => {
       }
     }
 
-    const result = await db.query(baseQuery, queryParams);
+    const result = await query(baseQuery, queryParams);
     res.json(result.rows);
   } catch (error) {
     console.error('Erro ao consultar rodovias:', error);
@@ -116,7 +116,7 @@ const getRodoviaById = async (req, res) => {
   `;
 
   try {
-    const result = await db.query(query, [id]);
+    const result = await query(query, [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Acidente não encontrado' });
     }
@@ -127,7 +127,6 @@ const getRodoviaById = async (req, res) => {
   }
 };
 
-
 const exportRodovias = async (req, res) => {
   const filters = { ...req.query, ...req.body };
   const whereClauses = [];
@@ -135,26 +134,36 @@ const exportRodovias = async (req, res) => {
   let paramIndex = 1;
 
   for (const [key, rawValue] of Object.entries(filters)) {
-    if (!rawValue || key === 'data_inicio' || key === 'data_fim' || key === 'limit' || key === 'page') continue;
-
+    if (!rawValue || ['data_inicio','data_fim','limit','page'].includes(key)) continue;
     const column = filterMap[key];
     if (!column) continue;
-
     const value = String(rawValue);
+
     if (value.includes(',')) {
       const parts = value.split(',').map(p => p.trim()).filter(Boolean);
-      const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
-      whereClauses.push(`${column} IN (${placeholders})`);
-      queryParams.push(...parts);
+      if (!parts.length) continue;
+      if (["uf","municipio","mes","nome_dia_semana","categoria_acidente","tipo_acidente","causa_acidente"].includes(key)) {
+        const ilike = parts.map(() => `${column} ILIKE $${paramIndex++}`).join(' OR ');
+        whereClauses.push(`(${ilike})`);
+        queryParams.push(...parts);
+      } else {
+        const placeholders = parts.map(() => `$${paramIndex++}`).join(', ');
+        whereClauses.push(`${column} IN (${placeholders})`);
+        queryParams.push(...parts);
+      }
     } else {
-      whereClauses.push(`${column} = $${paramIndex}`);
+      if (["uf","municipio","mes","nome_dia_semana","categoria_acidente","tipo_acidente","causa_acidente"].includes(key)) {
+        whereClauses.push(`${column} ILIKE $${paramIndex}`);
+      } else {
+        whereClauses.push(`${column} = $${paramIndex}`);
+      }
       queryParams.push(value);
       paramIndex++;
     }
   }
 
   if (filters.data_inicio && filters.data_fim) {
-    whereClauses.push(`data_completa BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+    whereClauses.push(`data_completa BETWEEN $${paramIndex} AND $${paramIndex+1}`);
     queryParams.push(filters.data_inicio, filters.data_fim);
     paramIndex += 2;
   } else if (filters.data_inicio) {
@@ -167,56 +176,56 @@ const exportRodovias = async (req, res) => {
     paramIndex++;
   }
 
+  // Defina explicitamente as colunas para alinhar header + ordem
+  const selectCols = [
+    'id_acidente_bronze',
+    'total_mortos',
+    'total_feridos',
+    'total_feridos_graves',
+    'total_feridos_leves',
+    'total_veiculos',
+    'data_completa',
+    'ano',
+    'nome_mes',
+    'nome_dia_semana',
+    'flag_fim_de_semana',
+    'municipio',
+    'uf_abrev',
+    'localidade',
+    'tipo_acidente',
+    'causa_acidente',
+    'categoria_acidente',
+    'modelo_veiculo',
+    'tipo_veiculo',
+    'marcas',
+    'idade',
+    'sexo',
+    'km',
+    'br',
+    'delegacia',
+    'condicao_metereologica',
+    'longitude',
+    'latitude',
+    'tipo_pista',
+    'fase_dia'
+  ];
+
   const baseQuery = `
-    SELECT *
+    SELECT ${selectCols.join(', ')}
     FROM gold.analytics_rodovias
-    ${whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''}
+    ${whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : ''}
     ORDER BY data_completa DESC
   `;
 
   const QueryStream = require('pg-query-stream');
-  const { pool } = db;
 
-  const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g, '-');
+  const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
   const filename = `relatorio_rodovias_${timestamp}.csv`;
 
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Type','text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
 
-  const headerRow = Object.keys({
-    id_acidente_bronze: '',
-    total_mortos: '',
-    total_feridos: '',
-    total_feridos_graves: '',
-    total_feridos_leves: '',
-    total_veiculos: '',
-    data_completa: '',
-    ano: '',
-    nome_mes: '',
-    nome_dia_semana: '',
-    flag_fim_de_semana: '',
-    municipio: '',
-    uf_abrev: '',
-    localidade: '',
-    tipo_acidente: '',
-    causa_acidente: '',
-    categoria_acidente: '',
-    modelo_veiculo: '',
-    tipo_veiculo: '',
-    marcas: '',
-    idade: '',
-    sexo: '',
-    km: '',
-    br: '',
-    delegacia: '',
-    condicao_metereologica: '',
-    longitude: '',
-    latitude: '',
-    tipo_pista: '',
-    fase_dia: ''
-  }).join(',');
-
-  res.write(headerRow + '\n');
+  res.write(selectCols.join(',') + '\n');
 
   let client;
   try {
@@ -225,9 +234,11 @@ const exportRodovias = async (req, res) => {
     const stream = client.query(qs);
 
     stream.on('data', (row) => {
-      const values = Object.values(row).map(v =>
-        v === null || v === undefined ? '' : `"${String(v).replace(/"/g, '""')}"`
-      );
+      // Usa ordem exata de selectCols
+      const values = selectCols.map(col => {
+        const v = row[col];
+        return (v === null || v === undefined) ? '' : `"${String(v).replace(/"/g,'""')}"`;
+      });
       res.write(values.join(',') + '\n');
     });
 
@@ -236,13 +247,15 @@ const exportRodovias = async (req, res) => {
       res.end();
     });
 
-    stream.on('error', err => {
+    stream.on('error', (err) => {
       client.release();
-      res.status(500).json({ error: 'Erro ao exportar rodovias' });
+      console.error('Erro stream export:', err);
+      if (!res.headersSent) res.status(500).json({ error: 'Erro ao exportar rodovias' });
     });
   } catch (err) {
     if (client) client.release();
-    res.status(500).json({ error: 'Erro ao exportar rodovias' });
+    console.error('Erro exportRodovias:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Erro ao exportar rodovias' });
   }
 };
 // Endpoint para indicadores agregados (cards + gráficos)
@@ -544,67 +557,67 @@ const getIndicadores = async (req, res) => {
     const order = [];
 
     if (indicadorParam === 'all' || indicadorParam === 'gerais') {
-      queries.indicadores = db.query(indicadoresQuery, queryParams);
+      queries.indicadores = query(indicadoresQuery, queryParams);
       order.push('indicadores');
     }
     if (indicadorParam === 'all' || indicadorParam === 'mes') {
-      queries.porMes = db.query(porMesQuery, queryParams);
+      queries.porMes = query(porMesQuery, queryParams);
       order.push('porMes');
     }
     if (indicadorParam === 'all' || indicadorParam === 'causa') {
-      queries.porCausa = db.query(porCausaQuery, queryParams);
+      queries.porCausa = query(porCausaQuery, queryParams);
       order.push('porCausa');
     }
     if (indicadorParam === 'all' || indicadorParam === 'tipo') {
-      queries.porTipo = db.query(porTipoQuery, queryParams);
+      queries.porTipo = query(porTipoQuery, queryParams);
       order.push('porTipo');
     }
     if (indicadorParam === 'all' || indicadorParam === 'categoria') {
-      queries.porCategoria = db.query(porCategoriaQuery, queryParams);
+      queries.porCategoria = query(porCategoriaQuery, queryParams);
       order.push('porCategoria');
     }
     if (indicadorParam === 'all' || indicadorParam === 'uf') {
-      queries.porUf = db.query(porUfQuery, queryParams);
+      queries.porUf = query(porUfQuery, queryParams);
       order.push('porUf');
     }
     if (indicadorParam === 'all' || indicadorParam === 'dia_semana') {
-      queries.porDiaSemana = db.query(porDiaSemanaQuery, queryParams);
+      queries.porDiaSemana = query(porDiaSemanaQuery, queryParams);
       order.push('porDiaSemana');
     }
     if (indicadorParam === 'all' || indicadorParam === 'condicao_metereologica') {
-      queries.porCondicaoMeterologica = db.query(porCondicaoMeterologicaQuery, queryParams);
+      queries.porCondicaoMeterologica = query(porCondicaoMeterologicaQuery, queryParams);
       order.push('porCondicaoMeterologica');
     }
     if (indicadorParam === 'all' || indicadorParam === 'marcas') {
-      queries.porMarcas = db.query(porMarcasQuery, queryParams);
+      queries.porMarcas = query(porMarcasQuery, queryParams);
       order.push('porMarcas');
     }
     if (indicadorParam === 'all' || indicadorParam === 'modelo_veiculo') {
-      queries.porModeloVeiculo = db.query(porModeloVeiculoQuery, queryParams);
+      queries.porModeloVeiculo = query(porModeloVeiculoQuery, queryParams);
       order.push('porModeloVeiculo');
     }
     if (indicadorParam === 'all' || indicadorParam === 'tipo_pista') {
-      queries.porTipoPista = db.query(porTipoPistaQuery, queryParams);
+      queries.porTipoPista = query(porTipoPistaQuery, queryParams);
       order.push('porTipoPista');
     }
     if (indicadorParam === 'all' || indicadorParam === 'idade_sexo') {
-      queries.porIdadeSexo = db.query(porIdadeSexo, queryParams);
+      queries.porIdadeSexo = query(porIdadeSexo, queryParams);
       order.push('porIdadeSexo');
     }
     if (indicadorParam === 'all' || indicadorParam === 'tipo_veiculo') {
-      queries.porTipoVeiculo = db.query(porTipoVeiculo, queryParams);
+      queries.porTipoVeiculo = query(porTipoVeiculo, queryParams);
       order.push('porTipoVeiculo');
     }
     if (indicadorParam === 'all' || indicadorParam === 'br') {
-      queries.porBr = db.query(porBr, queryParams);
+      queries.porBr = query(porBr, queryParams);
       order.push('porBr');
     }
     if (indicadorParam === 'all' || indicadorParam === 'localizacao') {
-      queries.porLocalizacao = db.query(porLocalizacao, queryParams);
+      queries.porLocalizacao = query(porLocalizacao, queryParams);
       order.push('porLocalizacao');
     }
     if (indicadorParam === 'all' || indicadorParam === 'percapita') {
-      queries.porPercapita = db.query(porPercapita, percapitaQueryParams);
+      queries.porPercapita = query(porPercapita, percapitaQueryParams);
       order.push('porPercapita');
     }
 
