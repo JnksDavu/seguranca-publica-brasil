@@ -365,44 +365,46 @@ export function Rodovias() {
     return () => { cancelled = true; };
   }, [currentPage, pageSize, rodovias.length, totalCount, lastServerPageFetched]);
 
-  const handleExportAll = async (format: 'csv' | 'json' | 'xlsx') => {
+  const handleExportAll = async (format: 'csv' | 'json') => {
+    const filters = buildFiltersForRequest();
+
     if (format === 'csv') {
       try {
         setExportLoading(true);
-        const filters = buildFiltersForRequest();
-        const params = Object.entries(filters)
-          .filter(([, v]) => v !== undefined && v !== '')
-          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-          .join('&');
-        const base = (api && (api.defaults && api.defaults.baseURL)) || '';
-        const trimmedBase = base.replace(/\/$/, '');
-        const url = `${trimmedBase}/rodovias/export${params ? `?${params}` : ''}`;
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.setAttribute('download', `relatorio_rodovias_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`);
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { try { document.body.removeChild(a); } catch (e) { /* ignore */ } }, 2000);
+        const res = await api.get('/rodovias/export', {
+          params: filters,
+          responseType: 'blob'
+        });
+        const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute(
+          'download',
+          `relatorio_rodovias_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`
+        );
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       } catch (err) {
-        console.error('Erro ao iniciar exportação no servidor', err);
+        console.error('Erro ao exportar CSV', err);
       } finally {
         setExportLoading(false);
       }
       return;
     }
 
-    const chunkSize = 1000; 
-    try {
-      const data = await fetchAllFiltered(chunkSize);
-      const nameSuffix = `${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}_${data.length}`;
-  if (format === 'json') exportJson(data, `relatorio_rodovias_${nameSuffix}.json`);
-    } catch (err) {
-      console.error('Erro na exportação completa', err);
-      setExportLoading(false);
+    if (format === 'json') {
+      const chunkSize = 1000;
+      try {
+        const data = await fetchAllFiltered(chunkSize);
+        const nameSuffix = `${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}_${data.length}`;
+        exportJson(data, `relatorio_rodovias_${nameSuffix}.json`);
+      } catch (err) {
+        console.error('Erro ao exportar JSON', err);
+        setExportLoading(false);
+      }
     }
   };
 
