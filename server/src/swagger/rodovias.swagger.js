@@ -277,28 +277,6 @@
  *         description: Token ausente ou inválido
  */
 
-/**
- * @swagger
- * /api/rodovias/{id}:
- *   get:
- *     summary: Busca acidente por ID
- *     tags: [Rodovias]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: integer }
- *     responses:
- *       200:
- *         description: Registro encontrado
- *         content:
- *           application/json:
- *             schema: { $ref: '#/components/schemas/Rodovia' }
- *       404:
- *         description: Não encontrado
- */
 
 /**
  * @swagger

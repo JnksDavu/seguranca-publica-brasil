@@ -10,6 +10,4 @@ router.post('/export', rodoviasController.exportRodovias);
 
 router.get('/export', rodoviasController.exportRodovias);
 
-router.get('/:id', rodoviasController.getRodoviaById);
-
 module.exports = router;

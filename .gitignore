@@ -12,3 +12,4 @@ cliente/build
 __pycache__/
 *.csv
 *.xlsx
+server/coverage

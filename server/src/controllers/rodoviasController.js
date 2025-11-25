@@ -106,27 +106,6 @@ const getRodovias = async (req, res) => {
   }
 };
 
-
-const getRodoviaById = async (req, res) => {
-  const { id } = req.params;
-  const query = `
-    SELECT *
-    FROM gold.analytics_rodovias
-    WHERE id_acidente_bronze = $1
-  `;
-
-  try {
-    const result = await query(query, [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Acidente não encontrado' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao consultar rodovia por ID:', error);
-    res.status(500).json({ error: 'Erro ao consultar rodovia' });
-  }
-};
-
 const exportRodovias = async (req, res) => {
   const filters = { ...req.query, ...req.body };
   const whereClauses = [];
@@ -666,4 +645,4 @@ const getIndicadores = async (req, res) => {
 };
 
 
-module.exports = { getRodovias, getRodoviaById, exportRodovias, getIndicadores };
+module.exports = { getRodovias, exportRodovias, getIndicadores };
