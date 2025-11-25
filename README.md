@@ -1,140 +1,189 @@
-# Capa
-
-![Estrutura - Portfólio (TCC) (1)](https://github.com/user-attachments/assets/b5384686-b2ce-4b62-ab14-5280e21f88b6)
-
-* **Título do Projeto**: Segurança Pública Brasil - Plataforma de Análise Integrada da Segurança Pública
+* **Título do Projeto**: Segurança pública Brasil
 * **Nome do Estudante**: Davi Andrzejewski Junkes
 * **Curso**: Engenharia de Software
 
-# Resumo
+# Glossário e Navegação
 
-Este documento apresenta o projeto "Segurança Pública Brasil", uma plataforma web destinada à centralização e visualização de dados públicos sobre segurança no Brasil. O objetivo é padronizar e disponibilizar informações de diferentes fontes governamentais, oferecendo uma interface interativa com mapas de calor, filtros e estatísticas para apoiar cidadãos, pesquisadores e gestores públicos.
+- [Descrição do projeto](#descrição)
+- [Motivação](#motivação)
+- [Objetivos](#objetivos)
+- [Requisitos](#3-especificação-técnica)
+- [Arquitetura](#arquitetura)
+- [Infraestrutura Cloud](#infraestrutura)
+- [Guia do repositório](#guia-do-repositório)
+- [Dados](#dados)
+- [Back-end](#back-end)
+- [Front-end](#front-end)
+- [Testes](#testes)
+- [Observabilidade](#observabilidade)
+- [Qualidade e segurança do código](#Qualidade-e-segurança-do-código)
+- [Instruções de Execução](#instruções-de-execução)
+- [Registro de Decisões (ADR/RFC)](#registro-de-decisões-adr-rfc)
+- [Metodologia Ágil](#metodologia-agil)
+- [Resultados](#resultados)
+- [Conclusão](#conclusão)
+- [Referências](#referências)
 
-## 1. Introdução
+<a id="descrição"></a>
+# Descrição
+
+...
 
 ### Contexto
-
-Atualmente, dados de segurança pública como criminalidade e acidentes estão distribuídos em diferentes plataformas governamentais com pouca padronização. Isso dificulta a análise ampla e acessível desses dados.
+...
 
 ### Justificativa
+...
 
-Este projeto visa resolver a descentralização e a falta de padronização dos dados públicos relacionados à segurança, oferecendo uma solução tecnológica que facilita a visualização e o cruzamento dessas informações.
+### Motivação
+Descreva a motivação do projeto, problemas enfrentados e impacto esperado.
 
 ### Objetivos
+...
 
-* Desenvolver uma plataforma unificada para consulta de dados públicos de segurança.
-* Padronizar e organizar as informações em um banco de dados relacional.
-* Oferecer visualizações como mapas de calor e dashboards interativos.
-* Permitir filtros por tipo de crime, cidade, data, entre outros.
+### Escopo
+- Escopo: funcionalidades principais e entregáveis.
 
-## 2. Descrição do Projeto
+## 2. Documentação
 
-### Tema do Projeto
+### Visão Geral do Repositório
+- Conteúdo: motivação, requisitos, modelagem, arquitetura, instruções de uso.
+- Mapa dos diretórios e arquivos relevantes.
 
-Desenvolvimento de um sistema web que centraliza dados públicos de órgãos como SSP, SINESP, PRF, entre outros, permitindo análise interativa de indicadores de segurança pública.
+### Clareza e Organização
+- Convenções de escrita, formatação e diagramas.
+- Coerência entre código-fonte e diagramas.
 
-### Problemas a Resolver
-
-* Dados espalhados em diversas fontes e formatos.
-* Falta de padronização e integração entre os dados.
-* Dificuldade de acesso e interpretação dos dados pelo público geral.
-
-### Limitações
-
-* O sistema não permitirá denúncias nem contato com órgãos de segurança.
-* Limita-se ao uso de dados abertos disponíveis oficialmente.
-
+<a id="3-especificação-técnica"></a>
 ## 3. Especificação Técnica
 
 ### 3.1. Requisitos de Software
-
-**Requisitos Funcionais (RF):**
-
-* RF01: Permitir a importação de dados em CSV, JSON e APIs públicas.
-* RF02: Exibir os dados em dashboards e mapas interativos.
-* RF03: Aplicar filtros por cidade, data e tipo de ocorrência.
-* RF04: Autenticação de usuários via JWT.
-
-**Requisitos Não-Funcionais (RNF):**
-
-* RNF01: Alta disponibilidade e performance.
-* RNF02: Interface responsiva.
-* RNF03: Segurança na autenticação e transmissão dos dados.
-
-**Representação dos Requisitos:** Diagrama de Casos de Uso (a ser incluído).
+...
 
 ### 3.2. Considerações de Design
-
-**Visão Inicial da Arquitetura:**
-
-* Front-end em React/Next.js
-* Back-end em Node.js (Express)
-* Banco de dados PostgreSQL
-* ETL com Apache Airflow
-* Streaming com Apache Kafka
-
-**Padrões de Arquitetura:**
-
-* MVC no backend
-* Microserviços para ingestão e tratamento de dados
-
-**Modelos C4:**
-
-* Nível de contexto: Sistema central que interage com fontes públicas de dados e usuários.
-* Contêineres: Front-end, API Gateway, ETL, Banco de Dados.
-* Componentes e Código: Detalhamento nos documentos técnicos específicos.
+...
 
 ### 3.3. Stack Tecnológica
-
-* **Linguagens**: TypeScript (Node.js e React).
-* **Frameworks**: Express, Next.js, Tailwind CSS.
-* **Bibliotecas**: Axios, Recharts, Leaflet.js, JWT.
-* **Ferramentas**: PostgreSQL, Airflow, Kafka, GitHub, Trello, Figma.
+...
 
 ### 3.4. Considerações de Segurança
+...
 
-* Utilização de autenticação JWT.
-* Criptografia na comunicação entre front-end e back-end (HTTPS).
-* Sanitização dos dados de entrada para prevenir injeção de código.
+## Arquitetura
 
-## 4. Próximos Passos
+### Visão C4
+- Contexto: atores e sistemas.
+- Contêineres: Front-end, API, ETL, DB, Kafka.
+- Componentes: principais módulos.
+- Código: referência cruzada para diretórios.
 
-* Construção dos pipelines ETL com Airflow (Portfólio I)
-* Desenvolvimento dos microserviços e API RESTful (Portfólio I)
-* Construção do front-end com mapas e filtros (Portfólio II)
-* Testes, documentação e refinamento final (Portfólio II)
+### Diagrama de Arquitetura
+- Imagem/mermaid do diagrama.
+- Breve explicação dos fluxos (ingestão, processamento, acesso).
 
-## 5. Referências
+<a id="infraestrutura"></a>
+### Infraestrutura Cloud
 
-* SSP-SC: [https://ssp.sc.gov.br/segurancaemnumeros/](https://ssp.sc.gov.br/segurancaemnumeros/)
-* API SINESP (não oficial): [https://github.com/rayonnunes/api\_seguranca\_publica](https://github.com/rayonnunes/api_seguranca_publica)
-* PRF Dados Abertos: [https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf](https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf)
-* Rede Social de Cidades: [https://www.redesocialdecidades.org.br/dados-abertos](https://www.redesocialdecidades.org.br/dados-abertos)
-* Documentação oficial das ferramentas utilizadas (Airflow, Kafka, PostgreSQL, etc.)
+...
 
-## 6. Apêndices (Opcionais)
+## Dados (ETL)
 
-* Prints das telas previstas
-* Esboço dos diagramas C4
-* Análise de fontes de dados disponíveis
+## Extração dos dados
 
-## 7. Avaliações de Professores
+    ## Extração de dados
 
-**Considerações Professor/a:**
+      # WebScrapping
 
----
+      # APIs
 
-**Considerações Professor/a:**
+## Banco de dados
 
----
+## Modelagem de Dados
 
-**Considerações Professor/a:**
+# Schemas
 
----
+   # Medallion Architecture
+
+    # Bronze
+
+    # Silver
+
+    # Gold
+
+- Esquema do PostgreSQL (tabelas, chaves, normalização).
+- Dicionário de dados (principais entidades e campos).
+- Estratégias de padronização (normalização de fontes públicas).
+
+## Back-end
+
+- API REST (Express/Node.js) e padrões.
+- Autenticação JWT.
+- Endpoints principais.
+- Integração com DB e serviços.
+
+## Front-end
+
+- Framework: Next.js, Tailwind CSS.
+- Páginas e rotas principais.
+- Visualizações: mapas (Leaflet), dashboards (Recharts).
+- Filtros e UX.
+
+## Testes
+
+- Tipos de testes (unitários, integração, e2e).
+- Como rodar os testes no VS Code e terminal.
+- Cobertura e relatórios.
+
+<a id="observabilidade"></a>
+## Observabilidade
+...
+
+<a id="Qualidade-e-segurança-do-código"></a>
+## Qualidade e segurança do código
+...
 
 
+<a id="instruções-de-execução"></a>
+## Instruções de Execução
 
-## Deploy
+### Pré-requisitos
+- Node.js, PostgreSQL, Docker (opcional), Airflow, Kafka.
 
+### Setup local
+- Instalação e configuração.
+- Variáveis de ambiente.
+- Migrações de banco.
 
-- Para deploy será utilizado o NGINX na VM oracle always free (Pegar config da maquina), ver o que é o certbot, juntamente como dominio comprado e hospedado na hostinger.
+### Executando
+- Backend: comandos de start.
+- Frontend: comandos de start.
+- ETL: inicialização dos pipelines.
+- Kafka: tópicos e serviços.
+
+<a id="registro-de-decisões-adr-rfc"></a>
+## Registro de Decisões (ADR/RFC)
+
+- Local dos ADRs/RFCs no repositório.
+- Como propor e registrar novas decisões.
+- Links para issues relevantes.
+
+<a id="metodologia-agil"></a>
+## Metodologia Ágil
+...
+
+<a id="resultados"></a>
+## Resultados
+...
+
+<a id="conclusão"></a>
+## Conclusão
+...
+
+## Histórico de Mudanças
+
+- Changelog resumido por versão/entrega.
+- Principais alterações e justificativas.
+
+<a id="referências"></a>
+## Referências
+
