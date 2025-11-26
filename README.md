@@ -35,27 +35,26 @@
 <a id="descrição"></a>
 # Descrição
 
-    A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil.     O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
+A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil.O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
    
-    Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização     com o mundo real.
+Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização     com o mundo real.
    
-    O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que
-    outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
+O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que
+outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
 
 ### Contexto
-    No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSV's mal
-    formatados e pdf's de atualização mensal), dificultando uma análise cruzada e estratégica.
+No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSV's mal
+formatados e pdf's de atualização mensal), dificultando uma análise cruzada e estratégica.
 
 ### Justificativa
-    A centralização desses dados em uma arquitetura moderna permite a aplicação de inteligência de dados para identificar padrões e zonas de risco. A exposição desses dados via API facilita a 
-    criação de um ecossistema de segurança pública mais transparente.
+A centralização desses dados em uma arquitetura moderna permite a aplicação de inteligência de dados para identificar padrões e zonas de risco. A exposição desses dados via API facilita a criação de um ecossistema de segurança pública mais transparente.
 
 ### Motivação
-    Este projeto nasce da necessidade acadêmica e prática de aplicar conceitos de Engenharia de Software, Engenharia de Dados e DevOps em um produto real que possa impactar positivamente a 
-    transparência da informação pública.
+Este projeto nasce da necessidade acadêmica e prática de aplicar conceitos de Engenharia de Software, Engenharia de Dados e DevOps em um produto real que possa impactar positivamente a 
+transparência da informação pública.
 
 ### Objetivos
-    Disponibilizar uma interface interativa com mapas de calor e dashboards analíticos, sustentada por um pipeline de dados robusto e uma API de alta performance acessível publicamente.
+Disponibilizar uma interface interativa com mapas de calor e dashboards analíticos, sustentada por um pipeline de dados robusto e uma API de alta performance acessível publicamente.
 
 ### Escopo
 - **Visualização de Dados:** Mapas de calor interativos e gráficos dinâmicos filtráveis por região, data e tipo de ocorrência.
@@ -66,10 +65,10 @@
 
 ### Visão Geral do Repositório
 
-    A estrutura do projeto segue uma organização modular, separando responsabilidades de infraestrutura, backend, frontend e engenharia de dados.
+A estrutura do projeto segue uma organização modular, separando responsabilidades de infraestrutura, backend, frontend e engenharia de dados.
 
 ```
-/
+
 ├── .github/workflows      # Pipelines CI/CD (GitHub Actions)
 ├── client                 # Frontend (React + Vite)
 ├── server                 # Backend (Node.js + Express)
@@ -77,11 +76,12 @@
 ├── data_processing        # Scripts Python (Bronze/Silver/Gold)
 ├── dataset                # Dados brutos
 └── docs                   # Documentação auxiliar (RFCs, Assets)
+
 ```
 
 ### Clareza e Organização
-    O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arquiteturais importantes e segue padrões de código definidos via ESLint e SonarQube. Diagramas C4 são utilizados 
-    para alinhar o código à arquitetura.
+O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arquiteturais importantes e segue padrões de código definidos via ESLint e SonarQube. Diagramas C4 são utilizados 
+para alinhar o código à arquitetura.
 
 <a id="3-especificação-técnica"></a>
 ## 3. Especificação Técnica
@@ -92,7 +92,7 @@
 * A documentação da API deve ser interativa (*Try it out*).
 
 ### 3.2. Considerações de Design
-    Utilização de Design System baseado em componentes **Radix UI** e **Tailwind CSS** para garantir acessibilidade, consistência visual e responsividade em diferentes dispositivos.
+Utilização de Design System baseado em componentes **Radix UI** e **Tailwind CSS** para garantir acessibilidade, consistência visual e responsividade em diferentes dispositivos.
 
 ## Paleta de cores
 
@@ -111,20 +111,20 @@
 <img width="1600" height="1200" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
 
 ### 3.3. Stack Tecnológica
-    * **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React, TypeScript.
-    * **Back-end:** Node.js, Express, PostgreSQL, Swagger JSDoc.
-    * **Dados:** Python, PostgreSQL, n8n.
-    * **Infra:** Oracle Cloud (VM ARM), PM2.
+* **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React, TypeScript.
+* **Back-end:** Node.js, Express, PostgreSQL, Swagger JSDoc.
+* **Dados:** Python, PostgreSQL, n8n.
+* **Infra:** Oracle Cloud (VM ARM), PM2.
 
 ### 3.4. Considerações de Segurança
-    * Autenticação via JWT (JSON Web Tokens).
-    * Criptografia de senhas com Bcrypt.
-    * Configuração de CORS restritiva.
-    * Análise estática de vulnerabilidades (SAST) com SonarCloud.
+* Autenticação via JWT (JSON Web Tokens).
+* Criptografia de senhas com Bcrypt.
+* Configuração de CORS restritiva.
+* Análise estática de vulnerabilidades (SAST) com SonarCloud.
 
 <a id="metodologia-agil"></a>
 ## Metodologia Ágil
-    O gerenciamento do projeto foi realizado utilizando a metodologia Ágil/Kanban, com tarefas segregadas entre Dados, Back-end e Front-end.
+O gerenciamento do projeto foi realizado utilizando a metodologia Ágil/Kanban, com tarefas segregadas entre Dados, Back-end e Front-end.
 
 * **Ferramenta de Gestão:** [ClickUp - Quadro do Projeto](https://app.clickup.com/90132140836/v/s/901312065003)
 
@@ -135,10 +135,9 @@
 
 <a id="registro-de-decisões-adr-rfc"></a>
 ## Registro de Decisões (ADR/RFC)
-    As decisões arquiteturais são registradas no formato de RFCs para manter o histórico de evolução do software e justificar escolhas técnicas.
+As decisões arquiteturais são registradas no formato de RFCs para manter o histórico de evolução do software e justificar escolhas técnicas.
 
 * [RFC-001: Escolha da Arquitetura Medallion](./RFC.md)
-* *Insira outros links de RFCs aqui*
 
 <a id="arquitetura"></a>
 ## Arquitetura
@@ -146,19 +145,19 @@
 <img width="1413" height="527" alt="download" src="https://github.com/user-attachments/assets/19dc3d55-dcf3-4ad2-9a77-7bc6ce30596b" />
 
 ### Visão C4
-    A arquitetura segue o modelo Client-Server com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
+A arquitetura segue o modelo Client-Server com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
 
 ![Diagrama C4](caminho/para/imagem.png)
 
 ### Fluxo de Dados
 1.  **Ingestão:** n8n e scripts Python coletam dados (Web Scraping/APIs).
 2.  **Processamento:** Dados fluem pelas camadas Bronze (Bruto) -> Silver (Limpo) -> Gold (Agregado).
-3.  **API:** Node.js serve os dados da camada Gold via REST.
+3.  **API:** Node.js serve os dados da camada Gold via API REST.
 4.  **Cliente:** React consome a API para renderizar gráficos e exibe a documentação Swagger para uso externo.
 
 <a id="infraestrutura"></a>
 ### Infraestrutura Cloud
-    O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de São Paulo (`sa-saopaulo-1`), garantindo alta disponibilidade e performance.
+O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de São Paulo (`sa-saopaulo-1`), garantindo alta disponibilidade e performance.
 
 **Regras Firewall VM:**
 
@@ -256,10 +255,10 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
 
 * **Dashboard de Qualidade:** [SonarCloud - Segurança Pública Brasil](https://sonarcloud.io/project/overview?id=JnksDavu_seguranca-publica-brasil)
 * **Métricas Analisadas:**
-    * Bugs e Vulnerabilidades.
-    * Code Smells.
-    * Cobertura de Testes.
-    * Duplicações de código.
+* Bugs e Vulnerabilidades.
+* Code Smells.
+* Cobertura de Testes.
+* Duplicações de código.
 
 <img width="3004" height="1644" alt="image" src="https://github.com/user-attachments/assets/2e7f91eb-f828-4c4a-b5f7-b23d17da0f91" />
 
