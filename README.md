@@ -80,6 +80,15 @@ A estrutura do projeto segue uma organização modular, separando responsabilida
 
 ```
 
+## Versionamento
+
+Utilizado para commits, pull requests o seguinte padrão de commits:
+
+   - Feat: Melhoria no código
+   - Fix: Ajuste no código
+   - Debug: Testes para melhoria ou ajuste
+   - Docs: Documentação
+
 ### Clareza e Organização
 O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arquiteturais importantes e segue padrões de código definidos via ESLint e SonarQube. Diagramas C4 são utilizados 
 para alinhar o código à arquitetura.
@@ -340,8 +349,11 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
 * Cobertura de Testes.
 * Duplicações de código.
 
+- Overview
 <img width="3004" height="1644" alt="image" src="https://github.com/user-attachments/assets/2e7f91eb-f828-4c4a-b5f7-b23d17da0f91" />
 
+- Pull Request
+<img width="2008" height="1370" alt="image" src="https://github.com/user-attachments/assets/a06284cf-cfbf-4963-83f7-297c48737f11" />
 
 <a id="instruções-de-execução"></a>
 ## Instruções de Execução
@@ -392,5 +404,8 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
 * [IBGE - API SIDRA](https://apisidra.ibge.gov.br)
 * [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
 * [SENAPPEN - Dados Prisionais](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
+
+## Padrão commits
+* [Commits](https://dev.to/renatoadorno/padroes-de-commits-commit-patterns-41co)
 * [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
 
