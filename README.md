@@ -35,15 +35,17 @@
 <a id="descrição"></a>
 # Descrição
 
-A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
-
-O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
+   A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
+   
+   Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização com o mundo real.
+   
+   O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
 
 ### Contexto
-No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSVs mal formatados), dificultando uma análise cruzada e estratégica.
+   No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSV's mal formatados e pdf's de atualização mensal), dificultando uma análise cruzada e estratégica.
 
 ### Justificativa
-A centralização desses dados em uma arquitetura moderna permite a aplicação de inteligência de dados para identificar padrões e zonas de risco. A exposição desses dados via API facilita a criação de um ecossistema de segurança pública mais transparente.
+   A centralização desses dados em uma arquitetura moderna permite a aplicação de inteligência de dados para identificar padrões e zonas de risco. A exposição desses dados via API facilita a criação de um ecossistema de segurança pública mais transparente.
 
 ### Motivação
 Este projeto nasce da necessidade acadêmica e prática de aplicar conceitos de Engenharia de Software, Engenharia de Dados e DevOps em um produto real que possa impactar positivamente a transparência da informação pública.
@@ -54,7 +56,7 @@ Disponibilizar uma interface interativa com mapas de calor e dashboards analíti
 ### Escopo
 - **Visualização de Dados:** Mapas de calor interativos e gráficos dinâmicos filtráveis por região, data e tipo de ocorrência.
 - **API Pública (Diferencial):** Swagger UI "embeddado" na aplicação para consumo direto dos dados da camada Gold.
-- **Integração de Dados:** Cruzamento de fontes da PRF, IBGE e FIPE.
+- **Integração de Dados:** Cruzamento de fontes da PRF, SINESP, SENAPPEN ,IBGE e FIPE.
 
 ## 2. Documentação
 
@@ -62,15 +64,16 @@ Disponibilizar uma interface interativa com mapas de calor e dashboards analíti
 
 A estrutura do projeto segue uma organização modular, separando responsabilidades de infraestrutura, backend, frontend e engenharia de dados.
 
-```text
+```
 /
 ├── .github/workflows      # Pipelines CI/CD (GitHub Actions)
 ├── client                 # Frontend (React + Vite)
 ├── server                 # Backend (Node.js + Express)
 ├── n8n/workflows          # Orquestração de ETL
 ├── data_processing        # Scripts Python (Bronze/Silver/Gold)
-├── dataset                # Dados brutos e dicionários
+├── dataset                # Dados brutos
 └── docs                   # Documentação auxiliar (RFCs, Assets)
+```
 
 ### Clareza e Organização
 O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arquiteturais importantes e segue padrões de código definidos via ESLint e SonarQube. Diagramas C4 são utilizados para alinhar o código à arquitetura.
