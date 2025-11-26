@@ -407,6 +407,29 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
 
 **Pronto, sua aplicação está rodando!**
 
+<a id="Resultados"></a>
+## Resultados
+
+* Processo de ETL completo:
+
+n8n: http://168.138.126.135:5678
+
+<img width="2368" height="1524" alt="image" src="https://github.com/user-attachments/assets/b4145ad2-8fce-4e8c-b737-3eb6d6b9006d" />
+
+Aplicação: 
+
+https://seguranca-publica-brasil.com
+
+<img width="3024" height="1644" alt="image" src="https://github.com/user-attachments/assets/442da891-88ad-46cf-8aa7-592b5dbf188c" />
+
+<img width="3012" height="1648" alt="image" src="https://github.com/user-attachments/assets/0be4f9da-aceb-4bed-b992-eb2012d7e8a5" />
+
+<img width="3024" height="1648" alt="image" src="https://github.com/user-attachments/assets/12e7b836-fef1-4036-b782-549863648ca1" />
+
+<img width="3024" height="1634" alt="image" src="https://github.com/user-attachments/assets/b9bade27-3fc1-4cb4-932e-10bab51f3632" />
+
+<img width="3024" height="1636" alt="image" src="https://github.com/user-attachments/assets/6e493b38-a88e-4a24-b981-2bc033d2e721" />
+
 <a id="referências"></a>
 ## Referências
 
