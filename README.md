@@ -35,7 +35,7 @@
 <a id="descrição"></a>
 # Descrição
 
-      A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
+   A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
    
    Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização com o mundo real.
    
@@ -89,11 +89,27 @@ O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arqu
 ### 3.2. Considerações de Design
 Utilização de Design System baseado em componentes **Radix UI** e **Tailwind CSS** para garantir acessibilidade, consistência visual e responsividade em diferentes dispositivos.
 
+## Paleta de cores
+
+Utilizado a seguinte paleta de cores para o estilo das paginas:
+
+#1E75A7
+
+#5757E6
+
+#5784E6
+
+#57DEE6
+
+#8657E6
+
+<img width="1600" height="1200" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
+
 ### 3.3. Stack Tecnológica
-* **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React.
+* **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React, TypeScript.
 * **Back-end:** Node.js, Express, PostgreSQL, Swagger JSDoc.
-* **Dados:** Python, SQL, n8n.
-* **Infra:** Oracle Cloud (VM ARM), Docker, PM2.
+* **Dados:** Python, PostgreSQL, n8n.
+* **Infra:** Oracle Cloud (VM ARM), PM2.
 
 ### 3.4. Considerações de Segurança
 * Autenticação via JWT (JSON Web Tokens).
@@ -107,6 +123,11 @@ O gerenciamento do projeto foi realizado utilizando a metodologia Ágil/Kanban, 
 
 * **Ferramenta de Gestão:** [ClickUp - Quadro do Projeto](https://app.clickup.com/90132140836/v/s/901312065003)
 
+<img width="570" height="244" alt="image" src="https://github.com/user-attachments/assets/2e08a84c-23f1-4b3b-a17e-e0fc1401d985" />
+
+<img width="2362" height="1394" alt="image" src="https://github.com/user-attachments/assets/bb9108b9-d80d-48aa-a78e-e39ea901458a" />
+
+
 <a id="registro-de-decisões-adr-rfc"></a>
 ## Registro de Decisões (ADR/RFC)
 As decisões arquiteturais são registradas no formato de RFCs para manter o histórico de evolução do software e justificar escolhas técnicas.
@@ -117,8 +138,10 @@ As decisões arquiteturais são registradas no formato de RFCs para manter o his
 <a id="arquitetura"></a>
 ## Arquitetura
 
+<img width="1413" height="527" alt="download" src="https://github.com/user-attachments/assets/19dc3d55-dcf3-4ad2-9a77-7bc6ce30596b" />
+
 ### Visão C4
-A arquitetura segue o modelo Cliente-Servidor com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
+A arquitetura segue o modelo Client-Server com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
 
 ![Diagrama C4](caminho/para/imagem.png)
 
@@ -131,6 +154,10 @@ A arquitetura segue o modelo Cliente-Servidor com uma camada dedicada de Engenha
 <a id="infraestrutura"></a>
 ### Infraestrutura Cloud
 O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de São Paulo (`sa-saopaulo-1`), garantindo alta disponibilidade e performance.
+
+**Regras Firewall VM:**
+
+<img width="2904" height="1528" alt="image" src="https://github.com/user-attachments/assets/df508c3c-71ee-4481-86e6-e3fb229997e5" />
 
 **Especificações da VM (Compute Instance):**
 * **Shape:** VM.Standard.A1.Flex (ARM)
@@ -198,9 +225,11 @@ O projeto adota práticas de TDD para o backend, garantindo a estabilidade das r
 ## CI/CD
 Pipeline de integração e entrega contínua configurado via **GitHub Actions**.
 
-* **Build:** Validação de build do React e Node.js.
-* **Test:** Execução automática da suíte de testes (Jest) a cada push.
-* **Analysis:** Envio de métricas de qualidade para o SonarCloud.
+* **Deploy to VM:** Processo de CI/CD para atualização do repositório e deploy para o servidor cloud.
+* **Build:** Envio de métricas de qualidade para o SonarCloud.
+
+<img width="3006" height="1328" alt="image" src="https://github.com/user-attachments/assets/f5fcfad3-ffb0-49c7-9e49-735ed7c05e42" />
+
 
 <a id="observabilidade"></a>
 ## Observabilidade
@@ -209,6 +238,12 @@ Monitoramento em tempo real da aplicação em produção utilizando **PM2**.
 * **Ferramenta:** PM2 Runtime & Dashboard.
 * **Link do Dashboard:** [Acessar Monitoramento PM2](https://app.pm2.io/bucket/691df1b8419e0c648b717c46/backend/overview/servers)
 * **Funcionalidades:** Monitoramento de CPU/Memória, Restart automático em falhas, Gerenciamento de Logs.
+
+# OverView
+<img width="3016" height="1516" alt="image" src="https://github.com/user-attachments/assets/442d8a27-86ba-43c6-bc2a-ae312ad80b97" />
+
+# RealTime Metrics
+<img width="3010" height="1636" alt="image" src="https://github.com/user-attachments/assets/1d104d96-07ec-455d-b42f-7461cd919422" />
 
 <a id="qualidade-e-segurança-do-código"></a>
 ## Qualidade e segurança do código
@@ -220,6 +255,9 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
     * Code Smells.
     * Cobertura de Testes.
     * Duplicações de código.
+
+<img width="3004" height="1644" alt="image" src="https://github.com/user-attachments/assets/2e7f91eb-f828-4c4a-b5f7-b23d17da0f91" />
+
 
 <a id="instruções-de-execução"></a>
 ## Instruções de Execução
@@ -235,3 +273,9 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
    ```bash
    git clone [https://github.com/seu-usuario/seguranca-publica-brasil.git](https://github.com/seu-usuario/seguranca-publica-brasil.git)
    cd seguranca-publica-brasil
+
+
+### Referencias 
+
+https://coolors.co/
+
