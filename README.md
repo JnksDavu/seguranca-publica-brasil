@@ -37,7 +37,7 @@
 
 A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil.O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
    
-Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização     com o mundo real.
+Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização com o mundo real.
    
 O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que
 outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
@@ -254,15 +254,32 @@ Localizados no diretório *data_processing* se encontram todos os processos de E
 
 ```
 
-├── datasets      # Dados brutos (WebScrapping)
+├── datasets      # Dados brutos (Web Scrapping)
 ├── queries       # Queries para construção das tabelas (separados em Bronze/Silver/Gold)
 └── scripts       # Códigos python e bash para execusão das cargas das tabelas          
 
 ```
 
 ### Extração dos dados
-* **Fontes:** PRF (Polícia Rodoviária Federal), IBGE, FIPE, SINESP.
 * **Automação:** Workflows no **n8n** orquestram os scripts de extração localizados em `data_processing/`.
+
+Existem 2 tipos de extrações dessas bases de dados públicos, sendo elas:
+
+   - Web Scrapping (Fluxo n8n para retirada dos dados e inserção na pasta Datasets)
+
+   Extração:
+
+   <img width="2648" height="1312" alt="image" src="https://github.com/user-attachments/assets/cf8d911c-f3f1-4fa3-9124-6cf15a699ec0" />
+
+   Inserção no banco:
+
+   <img width="2014" height="874" alt="image" src="https://github.com/user-attachments/assets/f4ce8468-b972-4618-a425-2fd15025c9a5" />
+   
+   - API (Sidra IBGE)
+
+   Código em python (Scripts) com o cron sendo feito pelo n8n:
+
+   <img width="3004" height="1350" alt="image" src="https://github.com/user-attachments/assets/5bab08a7-77b4-4d44-a7de-e79fcbb940da" />
 
 ### Modelagem de Dados
 
