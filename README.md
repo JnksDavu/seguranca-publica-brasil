@@ -35,15 +35,11 @@
 <a id="descrição"></a>
 # Descrição
 
-<div style="margin-left: 20px">
-
-   A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
+>   A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
    
-   Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização com o mundo real.
+>   Tendo a segmentação entre gráficos, relatórios e mapas analíticos a aplicação conta com a ajuda de filtros personalizados com tabelas auxilires como o da IBGE e FIPE para contextualização com o mundo real.
    
-   O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
-
-</div>
+>   O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
 
 ### Contexto
    No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSV's mal formatados e pdf's de atualização mensal), dificultando uma análise cruzada e estratégica.
