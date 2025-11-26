@@ -404,8 +404,9 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
 * [IBGE - API SIDRA](https://apisidra.ibge.gov.br)
 * [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
 * [SENAPPEN - Dados Prisionais](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
-
+* [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
+* 
 ## Padrão commits
 * [Commits](https://dev.to/renatoadorno/padroes-de-commits-commit-patterns-41co)
-* [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
+
 
