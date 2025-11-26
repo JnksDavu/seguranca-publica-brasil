@@ -75,7 +75,8 @@ A estrutura do projeto segue uma organização modular, separando responsabilida
 ├── n8n/workflows          # Orquestração de ETL
 ├── data_processing        # Scripts Python (Bronze/Silver/Gold)
 ├── dataset                # Dados brutos
-└── docs                   # Documentação auxiliar (RFCs, Assets)
+├── docs                   # Documentação auxiliar (RFCs, Assets)
+└── ecosystem.config.js    # Orquestração de processos PM2 (Runtime Production)
 
 ```
 
@@ -172,9 +173,83 @@ O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de
 * **Armazenamento:** Block Storage (Paravirtualized)
 * **IP Público:** Fixo (`168.138.126.135`)
 
+<a id="fontes-de-dados"></a>
+## Fontes de Dados
+
+O pipeline de ingestão de dados consome informações de cinco fontes oficiais distintas, utilizando métodos específicos de coleta e tratamento para cada uma.
+
+### 1. IBGE – API SIDRA
+* **URL:** [https://apisidra.ibge.gov.br](https://apisidra.ibge.gov.br)
+* **Método:** Requisições HTTP (REST JSON)
+* **Descrição:** Utilizada para obter dados de população municipal (estimativas e censo) para cálculo de taxas per capita.
+* **Pipeline de Processamento:**
+    1.  Consulta ao endpoint `/values` com parâmetros definidos (tabela, variável, período, nível territorial).
+    2.  Limpeza de nomes de municípios e normalização de códigos UF.
+    3.  Persistência na camada Bronze para posterior enriquecimento.
+
+### 2. SINESP – Bases Estaduais
+* **URL:** [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
+* **Método:** Download direto / Web Scraping controlado
+* **Descrição:** Planilhas públicas com indicadores consolidados de segurança. Dados apenas agregados, sem identificação pessoal.
+* **Pipeline de Processamento:**
+    1.  Automação de download ou script de captura HTTP.
+    2.  Conversão de encoding para UTF-8.
+    3.  Padronização de cabeçalhos e remoção de metadados de formatação.
+
+### 3. PRF – Acidentes em Rodovias
+* **URL:** [Dados Abertos da PRF](https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf)
+* **Método:** Web Scraping de página de dados abertos + Ingestão CSV
+* **Descrição:** Arquivos históricos detalhando acidentes, localização (lat/long), tipos e severidade.
+* **Pipeline de Processamento:**
+    1.  Extração da lista de arquivos disponíveis (CSV).
+    2.  Parse e normalização de colunas (tratamento de datas e coordenadas geográficas).
+    3.  Agrupamento e limpeza de dados inconsistentes.
+
+### 4. SENAPPEN – Ciclos População Carcerária
+* **URL:** [SISDEPEN - Bases de Dados](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
+* **Método:** Download público (CSV)
+* **Descrição:** Dados agregados de população carcerária por ciclos de levantamento (ex.: 14º, 15º ciclo).
+* **Pipeline de Processamento:**
+    1.  Download automatizado dos arquivos CSV.
+    2.  Validação de delimitadores e tipagem de dados.
+    3.  Remoção de colunas não utilizadas e carga em tabelas auxiliares.
+
+### 5. FIPE – Indicadores Econômicos
+* **URL:** [FIPE Online](https://fipe.online/)
+* **Método:** Dados via assinatura (CSV e API)
+* **Descrição:** Referências para marcas e modelos reais, por conta da falta de padrão desses valores na base de dados da PRF.
+* **Pipeline de Processamento:**
+    1.  Coleta pontual de séries públicas.
+    2.  Integração estrita como dimensão complementar (sem dados sensíveis).
+
+
+### Base Legal e Conformidade
+
+A aplicação utiliza estritamente dados públicos ou anonimizados, concentrando estatísticas para análise exploratória. **Não são armazenados nomes, CPFs ou quaisquer identificadores diretos**, em total conformidade com os princípios de minimização e finalidade.
+
+### Leis que nos asseguram.
+
+* **Lei de Acesso à Informação (Lei 12.527/2011):** Autoriza a obtenção e reutilização de dados públicos disponibilizados oficialmente, garantindo transparência.
+* **Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018):** Aplicação mitigada devido à ausência de dados pessoais identificáveis. O uso é estritamente estatístico.
+* **Política de Dados Abertos (Decreto 8.777/2016):** Incentiva a padronização e abertura de bases governamentais, legitimando a integração multibase realizada neste projeto.
+
 <a id="dados-etl"></a>
 ## Dados (ETL)
 A arquitetura de dados segue rigorosamente o padrão **Medallion Architecture** para garantir integridade e rastreabilidade.
+
+## Fluxos de trabalho
+
+** Scripts sendo executados no n8n com códigos em python **
+
+Localizados no diretório *data_processing* se encontram todos os processos de ETL deste projeto, sendo separados em:
+
+```
+
+├── datasets      # Dados brutos (WebScrapping)
+├── queries       # Queries para construção das tabelas (separados em Bronze/Silver/Gold)
+└── scripts       # Códigos python e bash para execusão das cargas das tabelas          
+
+```
 
 ### Extração dos dados
 * **Fontes:** PRF (Polícia Rodoviária Federal), IBGE, FIPE, SINESP.
@@ -194,6 +269,9 @@ A arquitetura de dados segue rigorosamente o padrão **Medallion Architecture** 
 
 <a id="back-end"></a>
 ## Back-end
+
+<img width="976" height="666" alt="image" src="https://github.com/user-attachments/assets/19d22feb-c990-4f0f-9f47-8f6d0ad3dc94" />
+
 Desenvolvido em **Node.js** com **Express**, priorizando a documentação e a padronização das respostas.
 
 * **Framework:** Express v5.
@@ -208,6 +286,9 @@ Desenvolvido em **Node.js** com **Express**, priorizando a documentação e a pa
 
 <a id="front-end"></a>
 ## Front-end
+
+<img width="984" height="750" alt="image" src="https://github.com/user-attachments/assets/fff5798e-9ec2-4544-b08b-3f28284f6e30" />
+
 SPA (Single Page Application) desenvolvida com **Vite** e **React**, focada em performance e visualização de dados geoespaciais.
 
 * **Core:** React 18, Vite.
@@ -233,7 +314,6 @@ Pipeline de integração e entrega contínua configurado via **GitHub Actions**.
 * **Build:** Envio de métricas de qualidade para o SonarCloud.
 
 <img width="3006" height="1328" alt="image" src="https://github.com/user-attachments/assets/f5fcfad3-ffb0-49c7-9e49-735ed7c05e42" />
-
 
 <a id="observabilidade"></a>
 ## Observabilidade
@@ -277,9 +357,40 @@ A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube)
    ```bash
    git clone [https://github.com/seu-usuario/seguranca-publica-brasil.git](https://github.com/seu-usuario/seguranca-publica-brasil.git)
    cd seguranca-publica-brasil
+   
+2. **Configurações:**
+   - Criar .env na raiz do projeto com as credenciais.
+   - Criar .env na pasta client para as credenciais do front-end
+  
+3. **Back-End:**
+   ```bash
+   cd server
+   npm i
+   npm run dev
+   # O servidor rodará na porta definida (ex: 3000)
 
+4. **Front-End:**
+   ```bash
+   cd client
+   npm i
+   npm run dev
+   # A aplicação estará acessível em http://localhost:5173
 
-### Referencias 
+**Pronto, sua aplicação está rodando!**
 
-https://coolors.co/
+<a id="referências"></a>
+## Referências
+
+### Documentação Técnica
+* [Documentação React](https://react.dev/)
+* [Documentação Node.js](https://nodejs.org/)
+* [Oracle Cloud Documentation](https://docs.oracle.com/en-us/iaas/)
+* [Swagger OpenAPI Spec](https://swagger.io/specification/)
+
+### Fontes de Dados Governamentais
+* [Dados Abertos PRF - Acidentes](https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf)
+* [IBGE - API SIDRA](https://apisidra.ibge.gov.br)
+* [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
+* [SENAPPEN - Dados Prisionais](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
+* [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
 
