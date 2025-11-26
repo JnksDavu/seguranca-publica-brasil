@@ -1,25 +1,32 @@
-* **Título do Projeto**: Segurança pública Brasil
-* **Nome do Estudante**: Davi Andrzejewski Junkes
-* **Curso**: Engenharia de Software
+# Segurança Pública Brasil
+
+**Nome do Estudante**: Davi Andrzejewski Junkes
+**Curso**: Engenharia de Software
+
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=GREEN&style=for-the-badge)
+![Badge Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![Badge React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Badge Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-F80000?style=for-the-badge&logo=oracle&logoColor=white)
+![Badge Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=Swagger&logoColor=black)
+
+---
 
 # Glossário e Navegação
 
 - [Descrição do projeto](#descrição)
-- [Motivação](#motivação)
-- [Objetivos](#objetivos)
-- [Requisitos](#3-especificação-técnica)
+- [Especificação Técnica](#3-especificação-técnica)
+- [Metodologia Ágil](#metodologia-agil)
+- [Registro de Decisões (ADR/RFC)](#registro-de-decisões-adr-rfc)
 - [Arquitetura](#arquitetura)
 - [Infraestrutura Cloud](#infraestrutura)
-- [Guia do repositório](#guia-do-repositório)
-- [Dados](#dados)
+- [Dados (ETL)](#dados-etl)
 - [Back-end](#back-end)
 - [Front-end](#front-end)
 - [Testes](#testes)
+- [CI/CD](#cicd)
 - [Observabilidade](#observabilidade)
-- [Qualidade e segurança do código](#Qualidade-e-segurança-do-código)
+- [Qualidade e Segurança](#qualidade-e-segurança-do-código)
 - [Instruções de Execução](#instruções-de-execução)
-- [Registro de Decisões (ADR/RFC)](#registro-de-decisões-adr-rfc)
-- [Metodologia Ágil](#metodologia-agil)
 - [Resultados](#resultados)
 - [Conclusão](#conclusão)
 - [Referências](#referências)
@@ -27,163 +34,200 @@
 <a id="descrição"></a>
 # Descrição
 
-...
+A plataforma **Segurança Pública Brasil** é uma solução web completa para centralização, análise e visualização de dados de órgãos públicos relacionados à segurança e demografia no Brasil. O sistema integra dados heterogêneos (PRF, IBGE, FIPE, SINESP) para fornecer insights sobre criminalidade, acidentes e indicadores sociais.
+
+O grande diferencial do projeto é a **democratização dos dados tratados**: além dos dashboards visuais, a aplicação oferece uma **API Pública Documentada via Swagger**, permitindo que outros desenvolvedores e pesquisadores consumam os dados já higienizados e organizados na arquitetura Medallion.
 
 ### Contexto
-...
+No cenário atual, os dados de segurança pública encontram-se fragmentados em diversas fontes governamentais, muitas vezes em formatos de difícil leitura (arquivos soltos, CSVs mal formatados), dificultando uma análise cruzada e estratégica.
 
 ### Justificativa
-...
+A centralização desses dados em uma arquitetura moderna permite a aplicação de inteligência de dados para identificar padrões e zonas de risco. A exposição desses dados via API facilita a criação de um ecossistema de segurança pública mais transparente.
 
 ### Motivação
-Descreva a motivação do projeto, problemas enfrentados e impacto esperado.
+Este projeto nasce da necessidade acadêmica e prática de aplicar conceitos de Engenharia de Software, Engenharia de Dados e DevOps em um produto real que possa impactar positivamente a transparência da informação pública.
 
 ### Objetivos
-...
+Disponibilizar uma interface interativa com mapas de calor e dashboards analíticos, sustentada por um pipeline de dados robusto e uma API de alta performance acessível publicamente.
 
 ### Escopo
-- Escopo: funcionalidades principais e entregáveis.
+- **Visualização de Dados:** Mapas de calor interativos e gráficos dinâmicos filtráveis por região, data e tipo de ocorrência.
+- **API Pública (Diferencial):** Swagger UI "embeddado" na aplicação para consumo direto dos dados da camada Gold.
+- **Integração de Dados:** Cruzamento de fontes da PRF, IBGE e FIPE.
 
 ## 2. Documentação
 
 ### Visão Geral do Repositório
-- Conteúdo: motivação, requisitos, modelagem, arquitetura, instruções de uso.
-- Mapa dos diretórios e arquivos relevantes.
+
+A estrutura do projeto segue uma organização modular, separando responsabilidades de infraestrutura, backend, frontend e engenharia de dados.
+
+```text
+/
+├── .github/workflows      # Pipelines CI/CD (GitHub Actions)
+├── client                 # Frontend (React + Vite)
+├── server                 # Backend (Node.js + Express)
+├── n8n/workflows          # Orquestração de ETL
+├── data_processing        # Scripts Python (Bronze/Silver/Gold)
+├── dataset                # Dados brutos e dicionários
+└── docs                   # Documentação auxiliar (RFCs, Assets)
 
 ### Clareza e Organização
-- Convenções de escrita, formatação e diagramas.
-- Coerência entre código-fonte e diagramas.
+O projeto utiliza **RFCs (Request for Comments)** para documentar decisões arquiteturais importantes e segue padrões de código definidos via ESLint e SonarQube. Diagramas C4 são utilizados para alinhar o código à arquitetura.
 
 <a id="3-especificação-técnica"></a>
 ## 3. Especificação Técnica
 
 ### 3.1. Requisitos de Software
-...
+* O sistema deve suportar carga de dados massiva via ETL.
+* Tempo de resposta da API deve ser otimizado para consultas analíticas.
+* A documentação da API deve ser interativa (*Try it out*).
 
 ### 3.2. Considerações de Design
-...
+Utilização de Design System baseado em componentes **Radix UI** e **Tailwind CSS** para garantir acessibilidade, consistência visual e responsividade em diferentes dispositivos.
 
 ### 3.3. Stack Tecnológica
-...
+* **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React.
+* **Back-end:** Node.js, Express, PostgreSQL, Swagger JSDoc.
+* **Dados:** Python, SQL, n8n.
+* **Infra:** Oracle Cloud (VM ARM), Docker, PM2.
 
 ### 3.4. Considerações de Segurança
-...
+* Autenticação via JWT (JSON Web Tokens).
+* Criptografia de senhas com Bcrypt.
+* Configuração de CORS restritiva.
+* Análise estática de vulnerabilidades (SAST) com SonarCloud.
 
+<a id="metodologia-agil"></a>
+## Metodologia Ágil
+O gerenciamento do projeto foi realizado utilizando a metodologia Ágil/Kanban, com tarefas segregadas entre Dados, Back-end e Front-end.
+
+* **Ferramenta de Gestão:** [ClickUp - Quadro do Projeto](https://app.clickup.com/90132140836/v/s/901312065003)
+
+<a id="registro-de-decisões-adr-rfc"></a>
+## Registro de Decisões (ADR/RFC)
+As decisões arquiteturais são registradas no formato de RFCs para manter o histórico de evolução do software e justificar escolhas técnicas.
+
+* [RFC-001: Escolha da Arquitetura Medallion](./RFC.md)
+* *Insira outros links de RFCs aqui*
+
+<a id="arquitetura"></a>
 ## Arquitetura
 
 ### Visão C4
-- Contexto: atores e sistemas.
-- Contêineres: Front-end, API, ETL, DB, Kafka.
-- Componentes: principais módulos.
-- Código: referência cruzada para diretórios.
+A arquitetura segue o modelo Cliente-Servidor com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
 
-### Diagrama de Arquitetura
-- Imagem/mermaid do diagrama.
-- Breve explicação dos fluxos (ingestão, processamento, acesso).
+![Diagrama C4](caminho/para/imagem.png)
+
+### Fluxo de Dados
+1.  **Ingestão:** n8n e scripts Python coletam dados (Web Scraping/APIs).
+2.  **Processamento:** Dados fluem pelas camadas Bronze (Bruto) -> Silver (Limpo) -> Gold (Agregado).
+3.  **API:** Node.js serve os dados da camada Gold via REST.
+4.  **Cliente:** React consome a API para renderizar gráficos e exibe a documentação Swagger para uso externo.
 
 <a id="infraestrutura"></a>
 ### Infraestrutura Cloud
+O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de São Paulo (`sa-saopaulo-1`), garantindo alta disponibilidade e performance.
 
-...
+**Especificações da VM (Compute Instance):**
+* **Shape:** VM.Standard.A1.Flex (ARM)
+* **OCPU count:** 4
+* **Memória RAM:** 24 GB
+* **Sistema Operacional:** Ubuntu 24.04 Minimal aarch64
+* **Rede:** 4 Gbps de largura de banda
+* **Armazenamento:** Block Storage (Paravirtualized)
+* **IP Público:** Fixo (`168.138.126.135`)
 
+<a id="dados-etl"></a>
 ## Dados (ETL)
+A arquitetura de dados segue rigorosamente o padrão **Medallion Architecture** para garantir integridade e rastreabilidade.
 
-## Extração dos dados
+### Extração dos dados
+* **Fontes:** PRF (Polícia Rodoviária Federal), IBGE, FIPE, SINESP.
+* **Automação:** Workflows no **n8n** orquestram os scripts de extração localizados em `data_processing/`.
 
-    ## Extração de dados
+### Modelagem de Dados
 
-      # WebScrapping
+#### Medallion Architecture
+* **Bronze:** Dados brutos (Raw) armazenados conforme extraídos das fontes públicas.
+* **Silver:** Dados limpos, tipados, com tratamento de nulos e remoção de duplicatas.
+* **Gold:** Modelagem dimensional (Star Schema) pronta para consumo da API.
 
-      # APIs
+**Esquema do Banco de Dados (PostgreSQL):**
+* **Dimensões:** `dim_calendario`, `dim_localidade`, `dim_tipo_acidente`, `dim_veiculos`.
+* **Fatos:** `fato_ocorrencias`, `fato_populacao`, `fato_rodovias`.
+* **Queries:** As consultas Gold são otimizadas para leitura rápida nos dashboards.
 
-## Banco de dados
-
-## Modelagem de Dados
-
-# Schemas
-
-   # Medallion Architecture
-
-    # Bronze
-
-    # Silver
-
-    # Gold
-
-- Esquema do PostgreSQL (tabelas, chaves, normalização).
-- Dicionário de dados (principais entidades e campos).
-- Estratégias de padronização (normalização de fontes públicas).
-
+<a id="back-end"></a>
 ## Back-end
+Desenvolvido em **Node.js** com **Express**, priorizando a documentação e a padronização das respostas.
 
-- API REST (Express/Node.js) e padrões.
-- Autenticação JWT.
-- Endpoints principais.
-- Integração com DB e serviços.
+* **Framework:** Express v5.
+* **Segurança:** `bcrypt`, `jsonwebtoken`, `cors`, `dotenv`.
+* **Banco de Dados:** `pg` (Cliente PostgreSQL).
+* **Documentação:** `swagger-jsdoc` e `swagger-ui-express`.
 
+**Destaques:**
+* A API segue os princípios REST.
+* Documentação automática acessível via rota `/api-docs`.
+* Tratamento centralizado de erros.
+
+<a id="front-end"></a>
 ## Front-end
+SPA (Single Page Application) desenvolvida com **Vite** e **React**, focada em performance e visualização de dados geoespaciais.
 
-- Framework: Next.js, Tailwind CSS.
-- Páginas e rotas principais.
-- Visualizações: mapas (Leaflet), dashboards (Recharts).
-- Filtros e UX.
+* **Core:** React 18, Vite.
+* **UI Components:** `@radix-ui` (Primitives acessíveis), `sonner` (Toast notifications).
+* **Estilização:** `tailwind-merge` e `clsx` para classes dinâmicas.
+* **Mapas e Gráficos:** `leaflet` e `react-leaflet` (Mapas de calor), `recharts` (Gráficos estatísticos).
+* **Integração API:** `swagger-ui-react` para embutir a documentação técnica diretamente no portal do usuário.
 
+<a id="testes"></a>
 ## Testes
+O projeto adota práticas de TDD para o backend, garantindo a estabilidade das regras de negócio.
 
-- Tipos de testes (unitários, integração, e2e).
-- Como rodar os testes no VS Code e terminal.
-- Cobertura e relatórios.
+* **Ferramenta:** Jest + Supertest.
+* **Tipos de Teste:** Unitários e Integração de rotas.
+* **Relatórios:** Cobertura de código gerada via `lcov` na pasta `coverage/`.
+* **Cobertura Atual:** Backend > 75%
+
+<a id="cicd"></a>
+## CI/CD
+Pipeline de integração e entrega contínua configurado via **GitHub Actions**.
+
+* **Build:** Validação de build do React e Node.js.
+* **Test:** Execução automática da suíte de testes (Jest) a cada push.
+* **Analysis:** Envio de métricas de qualidade para o SonarCloud.
 
 <a id="observabilidade"></a>
 ## Observabilidade
-...
+Monitoramento em tempo real da aplicação em produção utilizando **PM2**.
 
-<a id="Qualidade-e-segurança-do-código"></a>
+* **Ferramenta:** PM2 Runtime & Dashboard.
+* **Link do Dashboard:** [Acessar Monitoramento PM2](https://app.pm2.io/bucket/691df1b8419e0c648b717c46/backend/overview/servers)
+* **Funcionalidades:** Monitoramento de CPU/Memória, Restart automático em falhas, Gerenciamento de Logs.
+
+<a id="qualidade-e-segurança-do-código"></a>
 ## Qualidade e segurança do código
-...
+A qualidade do código é auditada continuamente pelo **SonarCloud** (SonarQube), garantindo conformidade com padrões de segurança e manutenibilidade.
 
+* **Dashboard de Qualidade:** [SonarCloud - Segurança Pública Brasil](https://sonarcloud.io/project/overview?id=JnksDavu_seguranca-publica-brasil)
+* **Métricas Analisadas:**
+    * Bugs e Vulnerabilidades.
+    * Code Smells.
+    * Cobertura de Testes.
+    * Duplicações de código.
 
 <a id="instruções-de-execução"></a>
 ## Instruções de Execução
 
 ### Pré-requisitos
-- Node.js, PostgreSQL, Docker (opcional), Airflow, Kafka.
+* Node.js v20+
+* PostgreSQL
+* Python 3.10+ (para execução local dos pipelines de ETL)
 
 ### Setup local
-- Instalação e configuração.
-- Variáveis de ambiente.
-- Migrações de banco.
 
-### Executando
-- Backend: comandos de start.
-- Frontend: comandos de start.
-- ETL: inicialização dos pipelines.
-- Kafka: tópicos e serviços.
-
-<a id="registro-de-decisões-adr-rfc"></a>
-## Registro de Decisões (ADR/RFC)
-
-- Local dos ADRs/RFCs no repositório.
-- Como propor e registrar novas decisões.
-- Links para issues relevantes.
-
-<a id="metodologia-agil"></a>
-## Metodologia Ágil
-...
-
-<a id="resultados"></a>
-## Resultados
-...
-
-<a id="conclusão"></a>
-## Conclusão
-...
-
-## Histórico de Mudanças
-
-- Changelog resumido por versão/entrega.
-- Principais alterações e justificativas.
-
-<a id="referências"></a>
-## Referências
-
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/seu-usuario/seguranca-publica-brasil.git](https://github.com/seu-usuario/seguranca-publica-brasil.git)
+   cd seguranca-publica-brasil
