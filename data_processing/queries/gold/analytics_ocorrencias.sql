@@ -1,39 +1,33 @@
 CREATE TABLE gold.analytics_ocorrencias_new AS
-SELECT
+WITH dist AS (
+    SELECT 
+        ano,
+        COUNT(*) AS total_ano,
+        CEIL(COUNT(*) * 0.08) AS qtd_amostra
+    FROM Silver.Fato_ocorrencias f
+    JOIN Silver.Dim_Calendario c ON f.fk_data = c.id_data
+    WHERE c.ano IN (2023, 2024, 2025)
+    GROUP BY ano
+),
+amostra AS (
+    SELECT *
+    FROM (
+        SELECT 
+            f.*, c.*, l.*, cr.*,
+            ROW_NUMBER() OVER (PARTITION BY c.ano ORDER BY RANDOM()) AS rnum
+        FROM Silver.Fato_ocorrencias f
+        JOIN Silver.Dim_Calendario c ON f.fk_data = c.id_data
+        JOIN Silver.Dim_Localidade l ON f.fk_localidade = l.id_localidade
+        JOIN Silver.Dim_Crime cr ON f.fk_crime = cr.id_crime
+        WHERE c.ano IN (2023, 2024, 2025)
+    ) x
+    JOIN dist d ON x.ano = d.ano
+    WHERE rnum <= d.qtd_amostra
+)
+SELECT *
+FROM amostra
+ORDER BY data_completa DESC;
 
-    f.id_fato_sinesp AS id_ocorrencia,
-
-    f.quantidade_ocorrencias,
-    f.quantidade_vitimas,
-    f.peso_apreendido,
-    
-    f.total_feminino,
-    f.total_masculino,
-    f.total_nao_informado,
-
-    to_char(c.data_completa, 'DD/MM/YYYY') AS data_formatada,
-    c.data_completa,
-    c.ano,
-    c.nome_mes,
-    c.nome_dia_semana,
-    c.flag_fim_de_semana,
-    c.trimestre_nome,
-    
-    l.municipio,
-    l.uf_abrev,
-
-    l.cod_municipio, 
-
-    cr.nome_crime AS evento,     
-    cr.categoria_crime
-
-FROM Silver.Fato_ocorrencias AS f
-
-LEFT JOIN Silver.Dim_Calendario AS c ON f.fk_data = c.id_data
-LEFT JOIN Silver.Dim_Localidade AS l ON f.fk_localidade = l.id_localidade
-LEFT JOIN Silver.Dim_Crime AS cr ON f.fk_crime = cr.id_crime
-
-ORDER BY c.data_completa DESC;
 
 DROP TABLE IF EXISTS gold.analytics_ocorrencias;
 
