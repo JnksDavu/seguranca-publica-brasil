@@ -28,7 +28,6 @@ const textFilterKeys = [
 // Lista de colunas disponíveis para export e SELECT *
 const exportColumns = [
   'id_ocorrencia',
-  'quantidade_ocorrencias',
   'quantidade_vitimas',
   'peso_apreendido',
   'total_feminino',
@@ -228,7 +227,7 @@ const getIndicadores = async (req, res) => {
   const indicadoresQuery = `
     SELECT
       COUNT(*) AS total_registros,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas,
       SUM(peso_apreendido) AS peso_apreendido_total,
       SUM(total_feminino) AS vitimas_femininas,
@@ -245,7 +244,7 @@ const getIndicadores = async (req, res) => {
   const porMesQuery = `
     SELECT
       nome_mes,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas
     FROM gold.analytics_ocorrencias
     ${whereSQL}
@@ -256,7 +255,7 @@ const getIndicadores = async (req, res) => {
   const porCategoriaQuery = `
     SELECT
       categoria_crime,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas
     FROM gold.analytics_ocorrencias
     ${whereSQL}
@@ -268,7 +267,7 @@ const getIndicadores = async (req, res) => {
   const porEventoQuery = `
     SELECT
       evento,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas,
       SUM(peso_apreendido) AS peso_apreendido_total
     FROM gold.analytics_ocorrencias
@@ -281,7 +280,7 @@ const getIndicadores = async (req, res) => {
   const porUfQuery = `
     SELECT
       uf_abrev,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas,
       SUM(peso_apreendido) AS peso_apreendido_total
     FROM gold.analytics_ocorrencias
@@ -291,21 +290,22 @@ const getIndicadores = async (req, res) => {
   `;
 
   const porMunicipioQuery = `
-    SELECT
+    with municipio as (SELECT
       municipio,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas
     FROM gold.analytics_ocorrencias
     ${whereSQL}
     GROUP BY municipio
-    ORDER BY total_ocorrencias DESC
-    LIMIT 15
+    ORDER BY total_vitimas DESC
+    LIMIT 15)
+    select * from municipio where municipio <> 'NÃO INFORMADO'
   `;
 
   const porDiaSemanaQuery = `
     SELECT
       nome_dia_semana,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas
     FROM gold.analytics_ocorrencias
     ${whereSQL}
@@ -316,7 +316,7 @@ const getIndicadores = async (req, res) => {
   const porTrimestreQuery = `
     SELECT
       trimestre_nome,
-      SUM(quantidade_ocorrencias) AS total_ocorrencias,
+      COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas
     FROM gold.analytics_ocorrencias
     ${whereSQL}

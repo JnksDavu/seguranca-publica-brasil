@@ -4,7 +4,7 @@ import { fetchIndicadores, IndicadoresResponse } from '../services/indicadoresSe
 import { useDebounce } from '../hooks/useDebounce';
 import { StatCard } from './ui/StatCard';
 import { Charts } from './RodoviasComponents/Charts';
-import { Reports } from './RodoviasComponents/Reports';
+import Reports from './Reports';
 import MapaAnaliticoHex from './MapaAnaliticoHex';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getTipoAcidente } from '../services/dimensoesService';
@@ -744,7 +744,7 @@ export function Rodovias() {
       )}
 
       {viewMode === 'relatorio' && (
-        <Reports
+        <Reports<Rodovia>
           pagedData={pagedData}
           totalCount={totalCount}
           loading={loading}
@@ -754,10 +754,25 @@ export function Rodovias() {
           onChangePageSize={handleChangePageSize}
           onPrevPage={handlePrevPage}
           onNextPage={handleNextPage}
+          columns={[
+            { header: 'Data', render: (r) => r.data_completa },
+            { header: 'Dia Semana', render: (r) => r.nome_dia_semana },
+            { header: 'Localidade', render: (r) => r.localidade },
+            { header: 'Tipo', render: (r) => r.tipo_acidente },
+            { header: 'Categoria', render: (r) => r.categoria_acidente },
+            { header: 'Causa', render: (r) => r.causa_acidente },
+            { header: 'Mortos', render: (r) => r.total_mortos, className: 'text-center font-semibold text-red-600' },
+            { header: 'Feridos', render: (r) => r.total_feridos, className: 'text-center font-semibold text-yellow-600' },
+            { header: 'Feridos Graves', render: (r) => r.total_feridos_graves, className: 'text-center' },
+            { header: 'Feridos Leves', render: (r) => r.total_feridos_leves, className: 'text-center' },
+            { header: 'Tipo Veículo', render: (r) => r.tipo_veiculo },
+            { header: 'Modelo Veículo', render: (r) => r.modelo_veiculo },
+            { header: 'Marcas', render: (r) => r.marcas },
+          ]}
+          rowKey={(r, i) => (r as any).id_acidente_bronze ?? `${r.data_completa}-${r.localidade}-${r.tipo_acidente}-${i}`}
           onExportAll={handleExportAll}
           exportLoading={exportLoading}
           exportProgress={exportProgress}
-          buildFiltersForRequest={buildFiltersForRequest}
         />
       )}
 

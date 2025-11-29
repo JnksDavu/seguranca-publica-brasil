@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { fetchRodovias, Rodovia } from '../services/rodoviasService';
+import { fetchOcorrencias, Ocorrencia } from '../services/ocorrenciasService';
 import { IndicadoresOcorrenciasResponse, fetchIndicadoresOcorrencias } from '../services/indicadoresOcorrencia';
 import { useDebounce } from '../hooks/useDebounce';
 import { StatCard } from './ui/StatCard';
-// Rodovias Charts removido para usar gráficos próprios de ocorrências
-import { Reports } from './RodoviasComponents/Reports';
+import Reports, { Column } from './Reports';
 import { Charts } from './OcorrenciasComponents/Charts';
 import MapaAnaliticoHex from './MapaAnaliticoHex';
 import api from '../services/api';
@@ -27,7 +26,7 @@ export function Ocorrencias() {
   const [selectedCausaAcidente, setSelectedCausaAcidente] = useState<string[]>([]);
   const [selectedCategoriaAcidente, setSelectedCategoriaAcidente] = useState<string[]>([]);
 
-  const [rodovias, setRodovias] = useState<Rodovia[]>([]);
+  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [serverChunkSize] = useState<number>(10000);
   const [lastServerPageFetched, setLastServerPageFetched] = useState<number>(0);
@@ -109,7 +108,7 @@ export function Ocorrencias() {
       setLoading(true);
       setError(null);
       setCurrentPage(1);
-      setRodovias([]);
+      setOcorrencias([]);
       setTotalCount(0);
       setLastServerPageFetched(0);
       const filters = {
@@ -126,14 +125,14 @@ export function Ocorrencias() {
         categoria_acidente: (debouncedFilters.selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
       };
       try {
-        const res = await fetchRodovias({ ...filters, page: 1, limit: serverChunkSize } as any);
+        const res = await fetchOcorrencias({ ...filters, page: 1, limit: serverChunkSize } as any);
         if (cancelled) return;
-        setRodovias(res.rows || []);
+        setOcorrencias(res.rows || []);
         setTotalCount(res.total || (res.rows ? res.rows.length : 0));
         setLastServerPageFetched(res.rows && res.rows.length ? 1 : 0);
       } catch (err) {
-        console.error('Erro ao buscar dados das rodovias', err);
-        if (!cancelled) setError('Erro ao buscar dados das rodovias');
+        console.error('Erro ao buscar ocorrências', err);
+        if (!cancelled) setError('Erro ao buscar ocorrências');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -230,7 +229,7 @@ export function Ocorrencias() {
   };
 
   const totalPages = Math.max(1, Math.ceil((totalCount || 0) / pageSize));
-  const pagedData = rodovias.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pagedData = ocorrencias.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleChangePageSize = (size: number) => {
     setPageSize(size);
@@ -240,24 +239,22 @@ export function Ocorrencias() {
   const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
   const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
 
-  const exportCsv = (rows: Rodovia[], filename?: string) => {
+  const exportCsv = (rows: Ocorrencia[], filename?: string) => {
     if (!rows || rows.length === 0) return;
-    const headers = ['Data','Ano','Mês','Dia Semana','Município','UF','Tipo','Categoria','Causa','Mortos','Feridos','Veículos'];
+    const headers = ['Data','Município','UF','Evento','Categoria','Qtd Ocorrências','Qtd Vítimas','Peso Apreendido','Feminino','Masculino','Não Informado'];
     const csvRows = [headers.join(',')];
     rows.forEach((item) => {
       const cols = [
         `"${item.data_completa ?? ''}"`,
-        `"${item.ano ?? ''}"`,
-        `"${item.nome_mes ?? ''}"`,
-        `"${item.nome_dia_semana ?? ''}"`,
         `"${item.municipio ?? ''}"`,
-        `"${(item as any).uf_abrev || (item as any).uf || ''}"`,
-        `"${item.tipo_acidente ?? ''}"`,
-        `"${item.categoria_acidente ?? ''}"`,
-        `"${item.causa_acidente ?? ''}"`,
-        `"${item.total_mortos ?? ''}"`,
-        `"${item.total_feridos_graves ?? ''}"`,
-        `"${item.total_veiculos ?? ''}"`,
+        `"${(item as any).uf_abrev || ''}"`,
+        `"${item.evento ?? ''}"`,
+        `"${item.categoria_crime ?? ''}"`,
+        `"${item.quantidade_vitimas ?? ''}"`,
+        `"${item.peso_apreendido ?? ''}"`,
+        `"${item.total_feminino ?? ''}"`,
+        `"${item.total_masculino ?? ''}"`,
+        `"${item.total_nao_informado ?? ''}"`,
       ];
       csvRows.push(cols.join(','));
     });
@@ -267,7 +264,7 @@ export function Ocorrencias() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const name = filename || `relatorio_rodovias_${new Date().toISOString()}.csv`;
+    const name = filename || `relatorio_ocorrencias_${new Date().toISOString()}.csv`;
     link.setAttribute('download', name);
     document.body.appendChild(link);
     link.click();
@@ -275,14 +272,14 @@ export function Ocorrencias() {
     URL.revokeObjectURL(url);
   };
 
-  const exportJson = (rows: Rodovia[], filename?: string) => {
+  const exportJson = (rows: Ocorrencia[], filename?: string) => {
     if (!rows || rows.length === 0) return;
     const jsonString = JSON.stringify(rows, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const name = filename || `relatorio_rodovias_${new Date().toISOString()}.json`;
+    const name = filename || `relatorio_ocorrencias_${new Date().toISOString()}.json`;
     link.setAttribute('download', name);
     document.body.appendChild(link);
     link.click();
@@ -303,25 +300,21 @@ export function Ocorrencias() {
     categoria_crime: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
   });
 
-  const fetchAllFiltered = async (chunkSize = serverChunkSize) : Promise<Rodovia[]> => {
+  const fetchAllFiltered = async (chunkSize = serverChunkSize) : Promise<Ocorrencia[]> => {
     setExportLoading(true);
     setExportProgress({ fetched: 0, pages: 0 });
     const filtersBase = buildFiltersForRequest();
-    const all: Rodovia[] = [];
+    const all: Ocorrencia[] = [];
     let page = 1;
     while (true) {
       try {
-
-        const res = await fetchRodovias({ ...filtersBase, page, limit: chunkSize } as any);
+        const res = await fetchOcorrencias({ ...filtersBase, page, limit: chunkSize } as any);
         const chunk = res.rows || [];
-        if (!chunk || chunk.length === 0) break;
+        if (!chunk || chunk.length === 0) /* Line 324 omitted */
         all.push(...chunk);
-        setExportProgress({ fetched: all.length, pages: page });
-        if (chunk.length < chunkSize) break; 
-        page += 1;
+        /* Lines 326-329 omitted */
       } catch (err) {
-        console.error('Erro enquanto buscava páginas para exportação', err);
-        break;
+        /* Lines 330-332 omitted */
       }
     }
     setExportLoading(false);
@@ -334,13 +327,13 @@ export function Ocorrencias() {
     const ensureDataForPage = async (pageNum: number) => {
       const requiredIndex = pageNum * pageSize;
       try {
-        while (!cancelled && rodovias.length < requiredIndex && rodovias.length < totalCount) {
+        while (!cancelled && ocorrencias.length < requiredIndex && ocorrencias.length < totalCount) {
           const nextServerPage = lastServerPageFetched + 1;
           const filters = buildFiltersForRequest();
-          const res = await fetchRodovias({ ...filters, page: nextServerPage, limit: serverChunkSize } as any);
+          const res = await fetchOcorrencias({ ...filters, page: nextServerPage, limit: serverChunkSize } as any);
           const rows = res.rows || [];
           if (!rows || rows.length === 0) break;
-          setRodovias((prev) => {
+          setOcorrencias((prev) => {
             const exists = prev.length >= (nextServerPage - 1) * serverChunkSize + rows.length;
             if (exists) return prev;
             return [...prev, ...rows];
@@ -354,7 +347,7 @@ export function Ocorrencias() {
 
     ensureDataForPage(currentPage);
     return () => { cancelled = true; };
-  }, [currentPage, pageSize, rodovias.length, totalCount, lastServerPageFetched]);
+  }, [currentPage, pageSize, ocorrencias.length, totalCount, lastServerPageFetched]);
 
   const handleExportAll = async (format: 'csv' | 'json') => {
     const filters = buildFiltersForRequest();
@@ -362,7 +355,7 @@ export function Ocorrencias() {
     if (format === 'csv') {
       try {
         setExportLoading(true);
-        const res = await api.get('/rodovias/export', {
+        const res = await api.get('/ocorrencias/export', {
           params: filters,
           responseType: 'blob'
         });
@@ -372,7 +365,7 @@ export function Ocorrencias() {
         link.href = url;
         link.setAttribute(
           'download',
-          `relatorio_rodovias_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`
+          `relatorio_ocorrencias_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`
         );
         document.body.appendChild(link);
         link.click();
@@ -391,7 +384,7 @@ export function Ocorrencias() {
       try {
         const data = await fetchAllFiltered(chunkSize);
         const nameSuffix = `${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}_${data.length}`;
-        exportJson(data, `relatorio_rodovias_${nameSuffix}.json`);
+        exportJson(data, `relatorio_ocorrencias_${nameSuffix}.json`);
       } catch (err) {
         console.error('Erro ao exportar JSON', err);
         setExportLoading(false);
@@ -734,7 +727,7 @@ export function Ocorrencias() {
       )}
 
       {viewMode === 'relatorio' && (
-        <Reports
+        <Reports<Ocorrencia>
           pagedData={pagedData}
           totalCount={totalCount}
           loading={loading}
@@ -744,10 +737,22 @@ export function Ocorrencias() {
           onChangePageSize={handleChangePageSize}
           onPrevPage={handlePrevPage}
           onNextPage={handleNextPage}
+          columns={[
+            { header: 'Data', render: (o) => o.data_completa },
+            { header: 'Município', render: (o) => o.municipio },
+            { header: 'UF', render: (o) => (o as any).uf_abrev || '' },
+            { header: 'Evento', render: (o) => o.evento },
+            { header: 'Categoria', render: (o) => o.categoria_crime },
+            { header: 'Qtd Vítimas', render: (o) => o.quantidade_vitimas, className: 'text-right' },
+            { header: 'Peso Apreendido', render: (o) => o.peso_apreendido, className: 'text-right' },
+            { header: 'Feminino', render: (o) => o.total_feminino, className: 'text-right' },
+            { header: 'Masculino', render: (o) => o.total_masculino, className: 'text-right' },
+            { header: 'Não Informado', render: (o) => o.total_nao_informado, className: 'text-right' },
+          ] as Column<Ocorrencia>[]}
+          rowKey={(o) => (o as any).id_ocorrencia ?? `${o.data_completa}-${o.municipio}-${(o as any).uf_abrev || ''}-${o.evento}`}
           onExportAll={handleExportAll}
           exportLoading={exportLoading}
           exportProgress={exportProgress}
-          buildFiltersForRequest={buildFiltersForRequest}
         />
       )}
 
