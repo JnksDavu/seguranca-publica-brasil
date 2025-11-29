@@ -9,20 +9,23 @@ from scripts.db import get_engine
 
 # Configuração
 engine = get_engine()
-DATASET_DIR = "/home/tcc/seguranca-publica-brasil/data_processing/dataset/senappen" # Confirme se o caminho é esse ou 'senappen'
-
-# Função de limpeza de nomes (Crucial para bater com o mapeamento)
+DATASET_DIR = "/home/tcc/seguranca-publica-brasil/data_processing/dataset/senappen" 
 def clean_col_name(col):
     if not isinstance(col, str): return str(col)
+    
+    # 1. Remove acentos
     nfkd_form = unicodedata.normalize('NFKD', col)
     col = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
-    # Remove tudo que não é letra ou número e substitui por _
-    return re.sub(r'[^a-z0-9]', '_', col.lower()).strip('_')
+    
+    # 2. Lowercase e troca caracteres especiais por _
+    col = re.sub(r'[^a-z0-9]', '_', col.lower())
+    
+    # 3. CORREÇÃO: Remove duplicidade de underscores (___ vira _)
+    col = re.sub(r'_+', '_', col)
+    
+    # 4. Remove _ do começo e fim
+    return col.strip('_')
 
-# ==============================================================================
-# MAPEAMENTO ROBUSTO: CSV Sujo -> Coluna Bonita no Banco
-# ==============================================================================
-# As chaves aqui são como o 'clean_col_name' vai deixar o header do CSV.
 COL_MAPPING = {
     # Metadados
     'ciclo': 'ciclo',
@@ -72,7 +75,7 @@ if not csv_files:
 
 print(f"{len(csv_files)} arquivos encontrados. Iniciando processo...")
 
-# 1. TRUNCATE (Limpa a tabela antes de começar)
+# 1. TRUNCATE E RESTART IDENTITY (Zera tudo para não duplicar)
 print("Limpando tabela bronze.senappen...")
 with engine.connect() as conn:
     conn.execute(text("TRUNCATE TABLE bronze.senappen RESTART IDENTITY;"))
@@ -85,10 +88,9 @@ chunksize = 20000
 for csv_file in csv_files:
     print(f"\nIniciando importação de: {os.path.basename(csv_file)}")
 
-    # Tenta UTF-8, se falhar tenta latin1 (comum em arquivos do governo)
+    # Tenta UTF-8, se falhar tenta latin1 (fallback padrão)
     try:
         encoding_type = "utf-8"
-        # Teste rápido de leitura
         pd.read_csv(csv_file, sep=";", encoding=encoding_type, nrows=1)
     except:
         encoding_type = "latin1"
@@ -96,16 +98,19 @@ for csv_file in csv_files:
     print(f"Usando encoding: {encoding_type}")
 
     try:
+        # Lê o CSV em chunks
         for i, chunk in enumerate(pd.read_csv(
                 csv_file,
                 sep=";", 
                 encoding=encoding_type,
                 chunksize=chunksize,
-                dtype=str, # Lê tudo como string primeiro para não quebrar
+                dtype=str, 
                 on_bad_lines='skip'
             )):
 
-            # 1. Normaliza nomes das colunas (aplica a função clean_col_name em todas)
+            # -----------------------------------------------------------
+            # 1. Normaliza TODOS os nomes das colunas do Chunk
+            # -----------------------------------------------------------
             chunk.columns = [clean_col_name(c) for c in chunk.columns]
 
             # 2. Separa colunas principais das métricas JSON
@@ -119,24 +124,27 @@ for csv_file in csv_files:
                     metrics_cols.append(col)
 
             # 3. Cria o DataFrame final renomeando as colunas mapeadas
+            # O .copy() é importante para não dar warning de SettingWithCopy
             df_final = chunk[list(cols_to_db.keys())].rename(columns=cols_to_db).copy()
 
-            # 4. Conversão de Tipos (Métricas devem ser numéricas)
+            # 4. Conversão de Tipos (Métricas devem ser numéricas para o PostgreSQL não reclamar)
             numeric_cols = [
                 'cap_provisorios_masc', 'cap_provisorios_fem', 'cap_provisorios_total',
                 'cap_fechado_masc', 'cap_fechado_fem', 'cap_fechado_total',
                 'cap_semiaberto_masc', 'cap_semiaberto_fem', 'cap_semiaberto_total',
                 'cap_aberto_masc', 'cap_aberto_fem', 'cap_aberto_total',
+                'cap_rdd_total', 'cap_internacao_total',
                 'ano'
             ]
             
             for col in numeric_cols:
                 if col in df_final.columns:
-                    # Converte para numérico, transformando erros/vazios em NaN (que vira NULL no SQL)
+                    # Converte, transformando erros/vazios em NaN
                     df_final[col] = pd.to_numeric(df_final[col], errors='coerce')
+                    # Preenche NaN com None (NULL no banco) ou 0 se preferir, mas NULL é mais seguro estatisticamente
+                    df_final[col] = df_final[col].where(pd.notnull(df_final[col]), None)
 
             # 5. Cria o JSONB com as colunas SOBRANTES (metrics_cols)
-            # Remove nulos e vazios para economizar espaço
             if metrics_cols:
                 df_final['dados_adicionais'] = chunk[metrics_cols].apply(
                     lambda x: json.dumps({k: v for k, v in x.to_dict().items() if pd.notnull(v) and v != ''}), 
