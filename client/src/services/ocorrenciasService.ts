@@ -32,7 +32,8 @@ export interface Ocorrencia {
 export interface OcorrenciasFilters {
   ano?: string | number;
   uf?: string;
-  categoria_acidente?: string;
+  categoria_crime?: string;
+  nome_crime?: string;
   municipio?: string;
   mes?: string;
   semana?: string;
@@ -40,12 +41,6 @@ export interface OcorrenciasFilters {
   flag_fim_de_semana?: string;
   data_inicio?: string;
   data_fim?: string; 
-  km?: number;
-  br?: string;
-  delegacia?: string;
-  condicao_metereologica?: string;
-  tipo_pista?: string;
-  fase_dia?: string;
 
   page?: number;
   limit?: number;

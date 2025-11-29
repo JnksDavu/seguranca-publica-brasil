@@ -130,12 +130,11 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
               <ResponsiveContainer width="100%" height={Math.max(250, categorias.length * 45)}>
                 <BarChart data={categorias} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis type="number" stroke="#5757E6" domain={[0, Math.ceil(maxOcorrencias * 1.1)]} />
+                  <XAxis type="number" stroke="#5757E6" domain={[0, Math.ceil(maxOcorrencias * 1)]} />
                   <YAxis dataKey="categoria" type="category" width={220} stroke="#5757E6" tick={{ fontSize: 13 }} />
                   <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
                   <Legend />
                   <Bar dataKey="ocorrencias" fill="#5757E6" name="Ocorrências" radius={[0, 8, 8, 0]} />
-                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -159,7 +158,6 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
                   <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
                   <Legend />
                   <Bar dataKey="ocorrencias" fill="#5784E6" name="Ocorrências" radius={[0, 8, 8, 0]} />
-                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -182,7 +180,6 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
                 <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
                 <Legend />
                 <Bar dataKey="ocorrencias" fill="#06b6d4" name="Ocorrências" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -200,12 +197,11 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
               <ResponsiveContainer width="100%" height={Math.max(250, municipios.length * 45)}>
                 <BarChart data={municipios} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis type="number" stroke="#06b6d4" domain={[0, Math.ceil(maxOcorrencias * 1.1)]} />
+                  <XAxis type="number" stroke="#06b6d4" />
                   <YAxis dataKey="municipio" type="category" width={260} stroke="#06b6d4" tick={{ fontSize: 13 }} />
                   <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
                   <Legend />
                   <Bar dataKey="ocorrencias" fill="#06b6d4" name="Ocorrências" radius={[0, 8, 8, 0]} />
-                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

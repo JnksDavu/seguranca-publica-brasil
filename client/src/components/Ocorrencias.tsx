@@ -9,7 +9,7 @@ import MapaAnaliticoHex from './MapaAnaliticoHex';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getCrime } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { Car, AlertCircle, Navigation, X, Calendar, MapPin, FileText, BarChart2, Skull, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound, Thermometer } from 'lucide-react';
+import { AlertCircle, X, Calendar, MapPin, FileText, BarChart2, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound, Thermometer } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import Select from 'react-select';
 
@@ -22,9 +22,8 @@ export function Ocorrencias() {
   const [selectedWeekend, setSelectedWeekend] = useState<string[]>([]);
   const [selectedUF, setSelectedUF] = useState<string[]>([]);
   const [selectedMunicipio, setSelectedMunicipio] = useState<string[]>([]);
-  const [selectedTipoAcidente, setSelectedTipoAcidente] = useState<string[]>([]);
-  const [selectedCausaAcidente, setSelectedCausaAcidente] = useState<string[]>([]);
-  const [selectedCategoriaAcidente, setSelectedCategoriaAcidente] = useState<string[]>([]);
+  const [selectedTipoCrime, setSelectedTipoCrime] = useState<string[]>([]);
+  const [selectedCategoriaCrime, setSelectedCategoriaCrime] = useState<string[]>([]);
 
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -49,9 +48,8 @@ export function Ocorrencias() {
   const [weekendOptions, setWeekendOptions] = useState<{value:string;label:string}[]>([{ value: 'true', label: 'Sim' },{ value: 'false', label: 'Não' }]);
   const [ufOptions, setUfOptions] = useState<{value:string;label:string}[]>([]);
   const [municipioOptions, setMunicipioOptions] = useState<{value:string;label:string}[]>([]);
-  const [tipoOptions, setTipoOptions] = useState<{value:string;label:string}[]>([]);
-  const [causaOptions, setCausaOptions] = useState<{value:string;label:string}[]>([]);
-  const [categoriaOptions, setCategoriaOptions] = useState<{value:string;label:string}[]>([]);
+  const [tipoCrimeOptions, setTipoCrimeOptions] = useState<{value:string;label:string}[]>([]);
+  const [categoriaCrimeOptions, setCategoriaCrimeOptions] = useState<{value:string;label:string}[]>([]);
 
   const [filtersState, setFiltersState] = useState({
     dateStart,
@@ -62,9 +60,8 @@ export function Ocorrencias() {
     selectedWeekend,
     selectedUF,
     selectedMunicipio,
-    selectedTipoAcidente,
-    selectedCausaAcidente,
-    selectedCategoriaAcidente,
+    selectedTipoCrime,
+    selectedCategoriaCrime,
   });
 
   // Debounce dos filtros
@@ -80,9 +77,8 @@ export function Ocorrencias() {
       selectedWeekend,
       selectedUF,
       selectedMunicipio,
-      selectedTipoAcidente,
-      selectedCausaAcidente,
-      selectedCategoriaAcidente,
+      selectedTipoCrime,
+      selectedCategoriaCrime,
     });
   }, [
     dateStart,
@@ -93,9 +89,8 @@ export function Ocorrencias() {
     selectedWeekend,
     selectedUF,
     selectedMunicipio,
-    selectedTipoAcidente,
-    selectedCausaAcidente,
-    selectedCategoriaAcidente,
+    selectedTipoCrime,
+    selectedCategoriaCrime,
   ]);
 
   const selectStyles = {
@@ -120,9 +115,8 @@ export function Ocorrencias() {
         flag_fim_de_semana: (debouncedFilters.selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
         uf: (debouncedFilters.selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
         municipio: (debouncedFilters.selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-        tipo_acidente: (debouncedFilters.selectedTipoAcidente as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
-        causa_acidente: (debouncedFilters.selectedCausaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
-        categoria_acidente: (debouncedFilters.selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        evento: (debouncedFilters.selectedTipoCrime as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+        categoria_crime: (debouncedFilters.selectedCategoriaCrime as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
       };
       try {
         const res = await fetchOcorrencias({ ...filters, page: 1, limit: serverChunkSize } as any);
@@ -153,7 +147,8 @@ export function Ocorrencias() {
         flag_fim_de_semana: (debouncedFilters.selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
         uf: (debouncedFilters.selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
         municipio: (debouncedFilters.selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-        categoria_crime: (debouncedFilters.selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+        evento: (debouncedFilters.selectedTipoCrime as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+        categoria_crime: (debouncedFilters.selectedCategoriaCrime as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
       };
       try {
         const res = await fetchIndicadoresOcorrencias(filters);
@@ -200,14 +195,18 @@ export function Ocorrencias() {
         setUfOptions(ufs);
         setMunicipioOptions(municipios);
 
-        // Carrega categorias de dim_crime
+        // Carrega tipos e categorias de crime (dim_crime)
         const crimes = await getCrime();
+        const tipoSet = new Set<string>();
         const categoriaSet = new Set<string>();
         (crimes || []).forEach((row: any) => {
+          if (row && row.nome_crime) tipoSet.add(String(row.nome_crime));
           if (row && row.categoria_crime) categoriaSet.add(String(row.categoria_crime));
         });
-        const categoriaList = Array.from(categoriaSet).map((c: any) => ({ value: String(c), label: String(c) }));
-        setCategoriaOptions(categoriaList);
+        const tipoList = Array.from(tipoSet).map((t) => ({ value: String(t), label: String(t) }));
+        const categoriaList = Array.from(categoriaSet).map((c) => ({ value: String(c), label: String(c) }));
+        setTipoCrimeOptions(tipoList);
+        setCategoriaCrimeOptions(categoriaList);
       } catch (err) {
         console.error('Erro ao carregar dimensões', err);
       }
@@ -223,9 +222,8 @@ export function Ocorrencias() {
     setSelectedWeekend([]);
     setSelectedUF([]);
     setSelectedMunicipio([]);
-    setSelectedTipoAcidente([]);
-    setSelectedCausaAcidente([]);
-    setSelectedCategoriaAcidente([]);
+    setSelectedTipoCrime([]);
+    setSelectedCategoriaCrime([]);
   };
 
   const totalPages = Math.max(1, Math.ceil((totalCount || 0) / pageSize));
@@ -296,8 +294,9 @@ export function Ocorrencias() {
     flag_fim_de_semana: (selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
     uf: (selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
     municipio: (selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-    // Ajuste para ocorrências: não usar tipo/causa/categoria_acidente
-    categoria_crime: (selectedCategoriaAcidente as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
+    // Ajuste para ocorrências: filtrar por evento
+    evento: (selectedTipoCrime as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
+    categoria_crime: (selectedCategoriaCrime as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
   });
 
   const fetchAllFiltered = async (chunkSize = serverChunkSize) : Promise<Ocorrencia[]> => {
@@ -570,28 +569,20 @@ export function Ocorrencias() {
             width: 520,
           },
           {
-            icon: Car,
-            state: selectedTipoAcidente,
-            set: setSelectedTipoAcidente,
-            options: tipoOptions,
-            placeholder: 'Tipo do acidente',
+            icon: ShieldAlert,
+            state: selectedTipoCrime,
+            set: setSelectedTipoCrime,
+            options: tipoCrimeOptions,
+            placeholder: 'Tipo Ocorrência',
             width: 500,
           },
           {
             icon: AlertCircle,
-            state: selectedCausaAcidente,
-            set: setSelectedCausaAcidente,
-            options: causaOptions,
-            placeholder: 'Causa do acidente',
+            state: selectedCategoriaCrime,
+            set: setSelectedCategoriaCrime,
+            options: categoriaCrimeOptions,
+            placeholder: 'Categoria Ocorrência',
             width: 550,
-          },
-          {
-            icon: AlertCircle,
-            state: selectedCategoriaAcidente,
-            set: setSelectedCategoriaAcidente,
-            options: categoriaOptions,
-            placeholder: 'Categoria do acidente',
-            width: 450,
           },
         ].map((f, i) => (
           <div
@@ -742,7 +733,8 @@ export function Ocorrencias() {
             { header: 'Município', render: (o) => o.municipio },
             { header: 'UF', render: (o) => (o as any).uf_abrev || '' },
             { header: 'Evento', render: (o) => o.evento },
-            { header: 'Categoria', render: (o) => o.categoria_crime },
+            { header: 'Categoria Crime', render: (o) => o.categoria_crime },
+            { header: 'Qtd Ocorrências', render: (o) => (o as any).quantidade_ocorrencias ?? '', className: 'text-right' },
             { header: 'Qtd Vítimas', render: (o) => o.quantidade_vitimas, className: 'text-right' },
             { header: 'Peso Apreendido', render: (o) => o.peso_apreendido, className: 'text-right' },
             { header: 'Feminino', render: (o) => o.total_feminino, className: 'text-right' },
