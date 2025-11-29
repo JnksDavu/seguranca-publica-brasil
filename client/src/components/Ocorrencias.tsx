@@ -675,17 +675,7 @@ export function Ocorrencias() {
             Relatório
           </button>
 
-          <button
-            onClick={() => setViewMode('heatmap')}
-            className={`flex items-center gap-2 px-6 py-6 rounded-md text-base transition ${
-              viewMode === 'heatmap'
-                ? 'bg-blue-600 text-white shadow'
-                : 'text-blue-700 hover:bg-blue-50'
-            }`}
-          >
-            <Thermometer className="w-5 h-5" />
-            Mapa de Calor
-          </button>
+         
         </div>
       </div>
 
