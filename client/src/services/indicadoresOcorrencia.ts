@@ -4,6 +4,9 @@ export interface IndicadoresGeraisOcorrencias {
   total_registros: number;
   total_ocorrencias: number;
   total_vitimas: number;
+  quantidade_mortos: number;
+  suicidios: number;
+  estupros: number;
   peso_apreendido_total: number;
   vitimas_femininas: number;
   vitimas_masculinas: number;
@@ -22,6 +25,7 @@ export interface OcorrenciasPorMunicipio { municipio: string; total_ocorrencias:
 export interface OcorrenciasPorDiaSemana { nome_dia_semana: string; total_ocorrencias: number; total_vitimas: number; }
 export interface OcorrenciasPorTrimestre { trimestre_nome: string; total_ocorrencias: number; total_vitimas: number; }
 export interface OcorrenciasPorSexo { total_feminino: number; total_masculino: number; total_nao_informado: number; }
+
 
 export interface IndicadoresOcorrenciasResponse {
   indicadores_gerais: IndicadoresGeraisOcorrencias;

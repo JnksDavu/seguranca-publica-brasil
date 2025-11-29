@@ -17,6 +17,10 @@ amostra AS (
 
 		    f.quantidade_ocorrencias,
 		    f.quantidade_vitimas,
+            case 
+                when categoria_crime in ('Suicídio','Crimes Violentos Letais','Mortes Envolvendo Agentes','Trânsito') or cr.nome_crime = 'Mortes a esclarecer (sem indício de crime)'
+                then quantidade_vitimas
+            end as quantidade_mortos,
 		    f.peso_apreendido,
 		    
 		    f.total_feminino,
@@ -52,6 +56,7 @@ SELECT
 
 		    quantidade_ocorrencias,
 		    quantidade_vitimas,
+            quantidade_mortos,
 		    peso_apreendido,
 		    
 		    total_feminino,

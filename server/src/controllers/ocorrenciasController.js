@@ -225,7 +225,7 @@ const getIndicadores = async (req, res) => {
   const indicadorParam = req.query.indicador || 'all';
 
   const indicadoresQuery = `
-    SELECT
+     SELECT
       COUNT(*) AS total_registros,
       COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas,
@@ -233,6 +233,15 @@ const getIndicadores = async (req, res) => {
       SUM(total_feminino) AS vitimas_femininas,
       SUM(total_masculino) AS vitimas_masculinas,
       SUM(total_nao_informado) AS vitimas_nao_informadas,
+      SUM(quantidade_mortos) as quantidade_mortos,
+      SUM(CASE WHEN categoria_crime = 'Suicídio' 
+         THEN quantidade_vitimas 
+         ELSE 0 
+      END) AS suicidios,
+      SUM(CASE WHEN evento in ('Estupro','Estupro de vulnerável') 
+         THEN quantidade_vitimas 
+         ELSE 0 
+      END) AS estupros,
       COUNT(DISTINCT uf_abrev) AS ufs_monitoradas,
       COUNT(DISTINCT municipio) AS municipios_monitorados,
       COUNT(DISTINCT evento) AS eventos_monitorados,
@@ -368,7 +377,9 @@ const getIndicadores = async (req, res) => {
         ufs_monitoradas: 0,
         municipios_monitorados: 0,
         eventos_monitorados: 0,
-        categorias_monitoradas: 0
+        categorias_monitoradas: 0,
+        suicidios: 0,
+        estupros: 0
       },
       ocorrencias_por_mes: results.porMes?.rows || [],
       ocorrencias_por_categoria: results.porCategoria?.rows || [],

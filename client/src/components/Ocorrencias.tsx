@@ -9,7 +9,7 @@ import MapaAnaliticoHex from './MapaAnaliticoHex';
 import api from '../services/api';
 import { getCalendario, getLocalidade, getCrime } from '../services/dimensoesService';
 import { motion } from 'motion/react';
-import { AlertCircle, X, Calendar, MapPin, FileText, BarChart2, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound, Thermometer } from 'lucide-react';
+import { AlertCircle, X, Calendar, MapPin, FileText, BarChart2, ShieldAlert, CircleAlert, Bandage, Route, MapPinned, UsersRound, Thermometer, Pill, Skull, FileQuestion, Mars, Venus, FileWarning } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import Select from 'react-select';
 
@@ -404,50 +404,51 @@ export function Ocorrencias() {
       value: indicadores?.indicadores_gerais?.total_vitimas?.toLocaleString('pt-BR') || '0',
       icon: ShieldAlert,
       color: 'text-yellow-600',
-      bgColor: '#dfe9ffff'
-    },
-    {
-      title: 'Peso Apreendido (kg)',
-      value: indicadores?.indicadores_gerais?.peso_apreendido_total?.toLocaleString('pt-BR') || '0',
-      icon: CircleAlert,
-      color: 'text-blue-600',
       bgColor: '#ddf3ffff'
     },
     {
       title: 'Vítimas Femininas',
       value: indicadores?.indicadores_gerais?.vitimas_femininas?.toLocaleString('pt-BR') || '0',
-      icon: UsersRound,
+      icon: Venus,
       color: 'text-pink-600',
       bgColor: '#dfe9ffff'
     },
     {
       title: 'Vítimas Masculinas',
       value: indicadores?.indicadores_gerais?.vitimas_masculinas?.toLocaleString('pt-BR') || '0',
-      icon: UsersRound,
+      icon: Mars,
       color: 'text-blue-600',
       bgColor: '#ddf3ffff'
     },
     {
       title: 'Vítimas Não Informadas',
       value: indicadores?.indicadores_gerais?.vitimas_nao_informadas?.toLocaleString('pt-BR') || '0',
-      icon: Bandage,
+      icon: FileQuestion,
       color: 'text-gray-600',
       bgColor: '#ddf3ffff'
     },
     {
-      title: 'UFs Monitoradas',
-      value: indicadores?.indicadores_gerais?.ufs_monitoradas?.toLocaleString('pt-BR') || '0',
-      icon: Route,
+      title: 'Total mortos',
+      value: indicadores?.indicadores_gerais?.quantidade_mortos?.toLocaleString('pt-BR') || '0',
+      icon: Skull,
       color: 'text-blue-600',
       bgColor: '#dfe9ffff'
     },
     {
-      title: 'Municípios Monitorados',
-      value: indicadores?.indicadores_gerais?.municipios_monitorados?.toLocaleString('pt-BR') || '0',
-      icon: MapPinned,
+      title: 'Total Estupros',
+      value: indicadores?.indicadores_gerais?.estupros?.toLocaleString('pt-BR') || '0',
+      icon: FileWarning,
       color: 'text-blue-600',
       bgColor: '#ddf3ffff'
+    },
+    {
+      title: 'Peso drogas apreendidas (kg)',
+      value: indicadores?.indicadores_gerais?.peso_apreendido_total?.toLocaleString('pt-BR') || '0',
+      icon: Pill,
+      color: 'text-blue-600',
+      bgColor: '#dfe9ffff'
     }
+    
   ];
 
   return (

@@ -5,6 +5,9 @@ export interface Ocorrencia {
 
 		    quantidade_ocorrencias: number,
 		    quantidade_vitimas: number,
+        quantidade_mortos: number,
+        suicidios: number,
+        estupros: number,
 		    peso_apreendido: number,
 		    
 		    total_feminino: number,
