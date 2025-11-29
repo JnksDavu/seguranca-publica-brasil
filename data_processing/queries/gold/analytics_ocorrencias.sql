@@ -13,7 +13,30 @@ amostra AS (
     SELECT *
     FROM (
         SELECT 
-            f.*, c.*, l.*, cr.*,
+            f.id_fato_sinesp AS id_ocorrencia,
+
+		    f.quantidade_ocorrencias,
+		    f.quantidade_vitimas,
+		    f.peso_apreendido,
+		    
+		    f.total_feminino,
+		    f.total_masculino,
+		    f.total_nao_informado,
+		
+		    to_char(c.data_completa, 'DD/MM/YYYY') AS data_formatada,
+		    c.data_completa,
+		    c.nome_mes,
+		    c.nome_dia_semana,
+		    c.flag_fim_de_semana,
+		    c.trimestre_nome,
+		    c.ano as ano_calendario,
+		    l.municipio,
+		    l.uf_abrev,
+		
+		    l.cod_municipio, 
+		
+		    cr.nome_crime AS evento,     
+		    cr.categoria_crime,
             ROW_NUMBER() OVER (PARTITION BY c.ano ORDER BY RANDOM()) AS rnum
         FROM Silver.Fato_ocorrencias f
         JOIN Silver.Dim_Calendario c ON f.fk_data = c.id_data
@@ -21,10 +44,35 @@ amostra AS (
         JOIN Silver.Dim_Crime cr ON f.fk_crime = cr.id_crime
         WHERE c.ano IN (2023, 2024, 2025)
     ) x
-    JOIN dist d ON x.ano = d.ano
+    JOIN dist d ON x.ano_calendario = d.ano
     WHERE rnum <= d.qtd_amostra
 )
-SELECT *
+SELECT 
+			id_ocorrencia,
+
+		    quantidade_ocorrencias,
+		    quantidade_vitimas,
+		    peso_apreendido,
+		    
+		    total_feminino,
+		    total_masculino,
+		    total_nao_informado,
+		
+		    data_formatada,
+		    data_completa,
+		    nome_mes,
+		    nome_dia_semana,
+		    flag_fim_de_semana,
+		    trimestre_nome,
+		    ano,
+		    
+		    municipio,
+		    uf_abrev,
+		
+		    cod_municipio, 
+		
+		    evento, 
+		    categoria_crime
 FROM amostra
 ORDER BY data_completa DESC;
 

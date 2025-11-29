@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { IndicadoresResponse } from '../../services/indicadoresService';
+import { IndicadoresOcorrenciasResponse } from '../../services/indicadoresOcorrencia';
 
 interface ChartsProps {
-  indicadores: IndicadoresResponse | null;
+  indicadores: IndicadoresOcorrenciasResponse | null;
   indicadoresLoading: boolean;
 }
 
@@ -35,95 +35,54 @@ const dayOfWeekOrder = {
 };
 
 export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
-  
-  // Ordena meses corretamente pelo calendário
-  const monthlyAccidents = (indicadores?.acidentes_por_mes || [])
-    .sort((a, b) => {
-      const monthA = monthOrder[a.nome_mes?.toLowerCase() as keyof typeof monthOrder] || 0;
-      const monthB = monthOrder[b.nome_mes?.toLowerCase() as keyof typeof monthOrder] || 0;
-      return monthA - monthB;
-    })
-    .map((item) => ({
-      month: item.nome_mes || '',
-      total: item.total || 0,
-      fatal: item.mortos || 0,
-      comFeridos: (item.total || 0) - (item.mortos || 0),
+  // Mensal: ocorrências e vítimas
+  const monthly = (indicadores?.ocorrencias_por_mes || [])
+    .sort((a, b) => (monthOrder[a.nome_mes?.toLowerCase() as keyof typeof monthOrder] || 0) - (monthOrder[b.nome_mes?.toLowerCase() as keyof typeof monthOrder] || 0))
+    .map((m) => ({
+      month: m.nome_mes,
+      ocorrencias: Number(m.total_ocorrencias || 0),
+      vitimas: Number(m.total_vitimas || 0),
     }));
 
-  const causeData = (indicadores?.acidentes_por_causa || [])
-    .slice(0, 10)
-    .map((item) => ({
-      cause: item.causa_acidente || '',
-      value: item.total || 0,
-    }));
+  // Categoria e Evento (Top N)
+  const categorias = (indicadores?.ocorrencias_por_categoria || [])
+    .slice(0, 15)
+    .map((c) => ({ categoria: c.categoria_crime, ocorrencias: Number(c.total_ocorrencias || 0), vitimas: Number(c.total_vitimas || 0) }));
 
-    const maxValue = Math.max(...causeData.map(i => i.value));
-    const normalizedCauseData = causeData.map(i => ({
-      ...i,
-      valueNormalized: (i.value / maxValue) * 100
-    }));
+  const eventos = (indicadores?.ocorrencias_por_evento || [])
+    .slice(0, 15)
+    .map((e) => ({ evento: e.evento, ocorrencias: Number(e.total_ocorrencias || 0), vitimas: Number(e.total_vitimas || 0) }));
 
+  // UF e Município
+  const ufs = (indicadores?.ocorrencias_por_uf || []).map((u) => ({ uf: u.uf_abrev, ocorrencias: Number(u.total_ocorrencias || 0), vitimas: Number(u.total_vitimas || 0) }));
+  const municipios = (indicadores?.ocorrencias_por_municipio || [])
+    .slice(0, 15)
+    .map((m) => ({ municipio: m.municipio, ocorrencias: Number(m.total_ocorrencias || 0), vitimas: Number(m.total_vitimas || 0) }));
 
-  const ufData = (indicadores?.acidentes_por_uf || []).map((item) => ({
-    uf: item.uf_abrev || '',
-    total: item.total || 0,
-    mortos: item.mortos || 0,
-  }));
+  // Dia da semana e Trimestre
+  const diaSemana = (indicadores?.ocorrencias_por_dia_semana || [])
+    .sort((a, b) => (dayOfWeekOrder[a.nome_dia_semana?.toLowerCase() as keyof typeof dayOfWeekOrder] || 0) - (dayOfWeekOrder[b.nome_dia_semana?.toLowerCase() as keyof typeof dayOfWeekOrder] || 0))
+    .map((d) => ({ dia: d.nome_dia_semana, ocorrencias: Number(d.total_ocorrencias || 0), vitimas: Number(d.total_vitimas || 0) }));
 
-  const dayOfWeekData = (indicadores?.acidentes_por_dia_semana || [])
-    .sort((a, b) => {
-      const dayA = dayOfWeekOrder[a.nome_dia_semana?.toLowerCase() as keyof typeof dayOfWeekOrder] || 0;
-      const dayB = dayOfWeekOrder[b.nome_dia_semana?.toLowerCase() as keyof typeof dayOfWeekOrder] || 0;
-      return dayA - dayB;
-    })
-    .map((item) => ({
-      day: item.nome_dia_semana || '',
-      total: item.total || 0,
-    }));
+  const trimestres = (indicadores?.ocorrencias_por_trimestre || [])
+    .map((t) => ({ trimestre: t.trimestre_nome, ocorrencias: Number(t.total_ocorrencias || 0), vitimas: Number(t.total_vitimas || 0) }));
 
-  const weatherData = (indicadores?.acidentes_por_condicao_metereologica || [])
-    .slice(0, 8)
-    .map((item) => ({
-      condition: item.condicao_metereologica || 'Desconhecido',
-      total: item.total || 0,
-    }));
+  // Sexo
+  const sexoRaw = indicadores?.ocorrencias_por_sexo || { total_feminino: 0, total_masculino: 0, total_nao_informado: 0 };
+  const sexo = [
+    { label: 'Feminino', total: Number(sexoRaw.total_feminino || 0) },
+    { label: 'Masculino', total: Number(sexoRaw.total_masculino || 0) },
+    { label: 'Não Informado', total: Number(sexoRaw.total_nao_informado || 0) },
+  ];
 
-  const brandsData = (indicadores?.acidentes_por_marcas || [])
-    .slice(0, 12)
-    .map((item) => ({
-      brand: item.marcas || 'Desconhecida',
-      total: item.total || 0,
-    }));
-
-    const TypeVeiculesData = (indicadores?.acidentes_por_tipo_veiculo || [])
-    .slice(0, 12)
-    .map((item) => ({
-      brand: item.tipo_veiculo || 'Desconhecida',
-      total: item.total || 0,
-    }));
-
-    const BrData = (indicadores?.acidentes_por_br || [])
-    .slice(0, 12)
-    .map((item) => ({
-      brand: item.br || 'Desconhecida',
-      total: item.total || 0,
-    }));
-
-  const modelData = (indicadores?.acidentes_por_modelo_veiculo || [])
-    .slice(0, 12)
-    .map((item) => ({
-      model: item.modelo_veiculo || 'Desconhecido',
-      total: item.total || 0,
-    }));
-
-  const roadTypeData = (indicadores?.acidentes_por_tipo_pista || []).map((item) => ({
-    type: item.tipo_pista || 'Desconhecido',
-    total: item.total || 0,
-  }));
-
-  const maxCauseValue = causeData.length
-  ? Math.max(...causeData.map((c) => c.value || 0))
-  : 0;
+  const maxOcorrencias = Math.max(1, ...[
+    ...categorias.map(c => c.ocorrencias),
+    ...eventos.map(e => e.ocorrencias),
+    ...ufs.map(u => u.ocorrencias),
+    ...municipios.map(m => m.ocorrencias),
+    ...diaSemana.map(d => d.ocorrencias),
+    ...trimestres.map(t => t.ocorrencias),
+  ]);
 
   if (indicadoresLoading) {
     return (
@@ -138,82 +97,45 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
   return (
   <div className="space-y-12">
 
-   {/* Principais Causas */}
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+   {/* Correlação Mensal: Ocorrências x Vítimas */}
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
       <Card className="border-blue-200 shadow-lg mb-8">
         <CardHeader>
-          <CardTitle className="text-lg font-bold text-blue-900">Principais Causas de Acidentes</CardTitle>
+          <CardTitle className="text-lg font-bold text-blue-900">Ocorrências x Vítimas (Mensal)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-y-auto max-h-96 pr-4">
-            <ResponsiveContainer width="100%" height={Math.max(300, causeData.length * 35)}>
-              <BarChart data={causeData} layout="vertical" margin={{ top: 5 , bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis
-                  type="number"
-                  stroke="#1E75A7"
-                  domain={[0, maxCauseValue * 1.1]} // 👈 folga no eixo
-                />
-                <YAxis 
-                  dataKey="cause" 
-                  type="category" 
-                  width={290} 
-                  stroke="#1E75A7"
-                  tick={{ fontSize: 14 }}
-                />
-                <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                />
-                <Bar 
-                  dataKey="value" 
-                  fill="#1E75A7"
-                  radius={[0, 8, 8, 0]}
-                  label={{
-                    position: 'insideRight',
-                    fill: '#fff',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }}
-                />
-
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={monthly}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+              <XAxis dataKey="month" stroke="#3b82f6" angle={-45} textAnchor="end" height={80} />
+              <YAxis stroke="#3b82f6" />
+              <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+              <Legend />
+              <Line dataKey="ocorrencias" name="Ocorrências" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} />
+              <Line dataKey="vitimas" name="Vítimas" stroke="#dc2626" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </motion.div>
 
-
-
-      {/* Acidentes por Tipo - Barra Horizontal com Scroll */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      {/* Ocorrências por Categoria */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Tipo</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Ocorrências por Categoria</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (indicadores?.acidentes_por_tipo?.length || 0) * 45)}>
-                <BarChart data={indicadores?.acidentes_por_tipo || []} layout="vertical" margin={{ top: 5, bottom: 5 }}>
+              <ResponsiveContainer width="100%" height={Math.max(250, categorias.length * 45)}>
+                <BarChart data={categorias} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis
-                  type="number"
-                  stroke="#5757E6"
-                  domain={[0, maxCauseValue * 1.1]} // 👈 folga no eixo
-                />
-                  <YAxis 
-                    dataKey="tipo_acidente" 
-                    type="category" 
-                    width={190} 
-                    stroke="#5757E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#5757E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
+                  <XAxis type="number" stroke="#5757E6" domain={[0, Math.ceil(maxOcorrencias * 1.1)]} />
+                  <YAxis dataKey="categoria" type="category" width={220} stroke="#5757E6" tick={{ fontSize: 13 }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                  <Legend />
+                  <Bar dataKey="ocorrencias" fill="#5757E6" name="Ocorrências" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -221,35 +143,23 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
         </Card>
       </motion.div>
 
-      {/* Acidentes por Categoria - Barra Horizontal com Scroll */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+      {/* Ocorrências por Evento */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Categoria</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Ocorrências por Evento</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" 
-              height={Math.max(250, (indicadores?.acidentes_por_categoria?.length || 0) * 55)}>
-                <BarChart data={indicadores?.acidentes_por_categoria || []} layout="vertical" margin={{ top: 5, bottom: 5 }}>
+              <ResponsiveContainer width="100%" height={Math.max(250, eventos.length * 55)}>
+                <BarChart data={eventos} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis
-                    type="number"
-                    stroke="#5784E6"
-                    domain={[0, maxCauseValue * 2.0]}
-                  />
-                  <YAxis 
-                    dataKey="categoria_acidente" 
-                    type="category" 
-                    width={190} 
-                    stroke="#5784E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#5784E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#11193aff', fontSize: 12, fontWeight: 'bold' }} />
+                  <XAxis type="number" stroke="#5784E6" domain={[0, Math.ceil(maxOcorrencias * 1.1)]} />
+                  <YAxis dataKey="evento" type="category" width={220} stroke="#5784E6" tick={{ fontSize: 13 }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                  <Legend />
+                  <Bar dataKey="ocorrencias" fill="#5784E6" name="Ocorrências" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -261,212 +171,41 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes VS Fatalidades</CardTitle>
-          </CardHeader>
-          <CardContent className='pb-12'>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={monthlyAccidents}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="month" stroke="#3b82f6" angle={-45} textAnchor="end" height={80} />
-                <YAxis stroke="#3b82f6" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                  cursor={{ strokeDasharray: '3 3' }}
-                  formatter={(value) => value.toLocaleString('pt-BR')}
-                />
-                <Legend />
-                <Line 
-                  dataKey="total" 
-                  stroke="#2563eb" 
-                  name="Total de Acidentes" 
-                  strokeWidth={2} 
-                  dot={{ r: 5, fill: '#2563eb' }}
-                  activeDot={{ r: 7 }}
-                  label={{ position: 'top', fill: '#2563eb' }}
-                />
-                <Line 
-                  dataKey="fatal" 
-                  stroke="#dc2626" 
-                  name="Vítimas Fatais" 
-                  strokeWidth={2} 
-                  dot={{ r: 5, fill: '#dc2626' }}
-                  activeDot={{ r: 7 }}
-                  label={{ position: 'top', fill: '#dc2626' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Distribuição por UF */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-        <Card className="border-blue-200 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Distribuição de Acidentes por Estado (UF)</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Ocorrências por UF</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={ufData}>
+              <BarChart data={ufs}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                 <XAxis dataKey="uf" stroke="#3b82f6" />
                 <YAxis stroke="#3b82f6" />
-                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
                 <Legend />
-                <Bar dataKey="total" fill="#06b6d4" name="Total de Acidentes" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#06b6d4', fontSize: 12 }} />
-                <Bar dataKey="mortos" fill="#ef4444" name="Vítimas Fatais" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#ef4444', fontSize: 12 }} />
+                <Bar dataKey="ocorrencias" fill="#06b6d4" name="Ocorrências" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Acidentes por Dia da Semana */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+      {/* Ocorrências por Município */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Dia da Semana</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={dayOfWeekData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="day" angle={-45} textAnchor="end" height={80} stroke="#8657E6" />
-                <YAxis
-                  type="number"
-                  stroke="#3b82f6"
-                  domain={[0, maxCauseValue * 2.1]}
-                />
-                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
-                <Bar dataKey="total" fill="#8657E6" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#8657E6', fontSize: 12 }} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Acidentes por Condição Meteorológica */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-        <Card className="border-blue-200 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Condição Meteorológica</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={weatherData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="condition" angle={-45} textAnchor="end" height={100} stroke="#3b82f6" />
-                <YAxis
-                  type="number"
-                  stroke="#3b82f6"
-                  domain={[0, maxCauseValue * 6.1]}
-                />
-                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
-                <Bar dataKey="total" fill="#1E75A7" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#1E75A7', fontSize: 12 }} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Acidentes por Tipo de Veiculo */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-        <Card className="border-blue-200 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por tipo de veiculo</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Top Municípios (Ocorrências)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (TypeVeiculesData?.length || 0) * 52)}>
-                <BarChart data={TypeVeiculesData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#5784E6" />
-                  <XAxis
-                    type="number"
-                    stroke="#5784E6"
-                    domain={[0, maxCauseValue * 0.9]}
-                  />
-                  <YAxis 
-                    dataKey="brand" 
-                    type="category" 
-                    width={170} 
-                    stroke="#5784E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#5784E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Acidentes por Marca de Carro */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-        <Card className="border-blue-200 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Principais Marcas de Veículos Envolvidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (brandsData?.length || 0) * 52)}>
-                <BarChart data={brandsData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#5757E6" />
-                  <XAxis
-                    type="number"
-                    stroke="#5757E6"
-                    domain={[0, maxCauseValue * 0.9]}
-                  />
-                  <YAxis 
-                    dataKey="brand" 
-                    type="category" 
-                    width={170} 
-                    stroke="#5757E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#5757E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Acidentes por Modelo de Carro */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-        <Card className="border-blue-200 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Principais Modelos de Veículos Envolvidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (modelData?.length || 0) * 52)}>
-                <BarChart data={modelData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
+              <ResponsiveContainer width="100%" height={Math.max(250, municipios.length * 45)}>
+                <BarChart data={municipios} layout="vertical" margin={{ top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                  <XAxis
-                    type="number"
-                    stroke="#8657E6"
-                    domain={[0, maxCauseValue * 0.1]}
-                  />
-                  <YAxis 
-                    dataKey="model" 
-                    type="category" 
-                    width={170} 
-                    stroke="#8657E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#8657E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
+                  <XAxis type="number" stroke="#06b6d4" domain={[0, Math.ceil(maxOcorrencias * 1.1)]} />
+                  <YAxis dataKey="municipio" type="category" width={260} stroke="#06b6d4" tick={{ fontSize: 13 }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                  <Legend />
+                  <Bar dataKey="ocorrencias" fill="#06b6d4" name="Ocorrências" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="vitimas" fill="#ef4444" name="Vítimas" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -474,55 +213,64 @@ export function Charts({ indicadores, indicadoresLoading }: ChartsProps) {
         </Card>
       </motion.div>
 
-      {/* Acidentes por Br */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+      {/* Ocorrências por Dia da Semana */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card className="border-blue-200 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Br</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Ocorrências por Dia da Semana</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-y-auto max-h-72 pr-4">
-              <ResponsiveContainer width="100%" height={Math.max(250, (BrData?.length || 0) * 42)}>
-                <BarChart data={BrData} layout="vertical" margin={{ top: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#5784E6" />
-                  <XAxis
-                    type="number"
-                    stroke="#5784E6"
-                    domain={[0, maxCauseValue * 0.9]}
-                  />
-                  <YAxis 
-                    dataKey="brand" 
-                    type="category" 
-                    width={170} 
-                    stroke="#5784E6"
-                    tick={{ fontSize: 14 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }}
-                    formatter={(value) => value.toLocaleString('pt-BR')}
-                  />
-                  <Bar dataKey="total" fill="#5784E6" radius={[0, 8, 8, 0]} label={{ position: 'center', fill: '#fff', fontSize: 12, fontWeight: 'bold' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={diaSemana}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                <XAxis dataKey="dia" angle={-45} textAnchor="end" height={80} stroke="#8657E6" />
+                <YAxis type="number" stroke="#3b82f6" />
+                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                <Legend />
+                <Bar dataKey="ocorrencias" name="Ocorrências" fill="#8657E6" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="vitimas" name="Vítimas" fill="#ef4444" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Acidentes por Tipo de Pista */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
+      {/* Ocorrências por Trimestre */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+        <Card className="border-blue-200 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-blue-900">Ocorrências por Trimestre</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={trimestres}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                <XAxis dataKey="trimestre" stroke="#1e75a7" />
+                <YAxis stroke="#1e75a7" />
+                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                <Legend />
+                <Bar dataKey="ocorrencias" name="Ocorrências" fill="#1e75a7" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="vitimas" name="Vítimas" fill="#ef4444" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Distribuição por Sexo */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <Card className="border-blue-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-blue-900">Acidentes por Tipo de Pista</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-900">Distribuição por Sexo</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={roadTypeData}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={sexo}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="type" angle={-45} textAnchor="end" height={80} stroke="#1e75a7" />
-                <YAxis stroke="#1e75a7" />
-                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} />
-                <Bar dataKey="total" fill="#1e75a7" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#1e75a7', fontSize: 12 }} />
+                <XAxis dataKey="label" stroke="#3b82f6" />
+                <YAxis stroke="#3b82f6" />
+                <Tooltip contentStyle={{ backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe' }} formatter={(v) => Number(v).toLocaleString('pt-BR')} />
+                <Bar dataKey="total" fill="#3b82f6" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

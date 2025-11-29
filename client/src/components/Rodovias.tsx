@@ -34,7 +34,7 @@ export function Rodovias() {
   const [error, setError] = useState<string | null>(null);
 
   const [indicadores, setIndicadores] = useState<IndicadoresResponse | null>(null);
-  const [indicadoresLoading, setIndicadoresLoading] = useState(false);
+  const [indicadoresLoading, setIndicadoresLoading] = useState(true);
 
   const [viewMode, setViewMode] = useState<'graficos' | 'relatorio' | 'heatmap'>('graficos');
 
@@ -728,7 +728,7 @@ export function Rodovias() {
         >
           <StatCard
             title={stat.title}
-            value={stat.value}
+            value={indicadoresLoading ? '' : stat.value}
             icon={stat.icon}
             color={stat.color}
             bgColor={stat.bgColor}
