@@ -442,7 +442,7 @@ export function Ocorrencias() {
       bgColor: '#ddf3ffff'
     },
     {
-      title: 'Peso drogas apreendidas (kg)',
+      title: 'Peso drogas apreendidas',
       value: indicadores?.indicadores_gerais?.peso_apreendido_total?.toLocaleString('pt-BR') || '0',
       icon: Pill,
       color: 'text-blue-600',

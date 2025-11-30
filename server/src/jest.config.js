@@ -1,11 +1,7 @@
 module.exports = {
     testEnvironment: "node",
-    verbose: true,
-    coverageDirectory: "coverage",
-    collectCoverageFrom: [
-      "controllers/**/*.js",
-      "routes/**/*.js",
-      "middlewares/**/*.js"
-    ]
+    setupFilesAfterEnv: ["<rootDir>/src/tests/setup.js"],
+    detectOpenHandles: true,
+    forceExit: true
   };
   

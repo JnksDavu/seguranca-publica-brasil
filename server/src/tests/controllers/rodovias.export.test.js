@@ -1,6 +1,10 @@
 jest.mock("../../middlewares/auth", () => (req, res, next) => next());
+
 const request = require("supertest");
 const app = require("../../app");
+const MockStream = require("../helpers/mockStream");
+
+jest.mock("pg-query-stream", () => jest.fn());
 
 jest.mock("../../config/db", () => ({
   query: jest.fn(),
@@ -9,25 +13,59 @@ jest.mock("../../config/db", () => ({
 
 const dbMock = require("../../config/db");
 
-describe("POST /api/rodovias/export", () => {
+describe("EXPORT RODOVIAS — FIXED", () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  test("Deve gerar arquivo CSV", async () => {
+  test("stream com sucesso", async () => {
+    const stream = new MockStream();
 
-    dbMock.pool.connect.mockResolvedValue({
-      query: () => ({
-        on: jest.fn().mockImplementation((evento, cb) => {
-          if (evento === "end") cb();
-        })
-      }),
+    const fakeClient = {
+      query: () => stream,
       release: jest.fn()
-    });
+    };
 
-    const response = await request(app).post("/api/rodovias/export");
+    dbMock.pool.connect.mockResolvedValue(fakeClient);
 
-    expect(response.status).toBe(200);
-    expect(response.headers["content-type"]).toContain("text/csv");
+    // supertest começa a requisição
+    const req = request(app).post("/api/rodovias/export");
+
+    // Emite eventos sincronamente
+    stream.data({ id_acidente_bronze: 1 });
+    stream.end();
+
+    const res = await req;
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+  });
+
+  test("erro no stream", async () => {
+    const stream = new MockStream();
+
+    const fakeClient = {
+      query: () => stream,
+      release: jest.fn()
+    };
+
+    dbMock.pool.connect.mockResolvedValue(fakeClient);
+
+    const req = request(app).post("/api/rodovias/export");
+
+    stream.error(new Error("erro-stream"));
+
+    const res = await req;
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe("Erro ao exportar rodovias");
+  });
+
+  test("erro ao conectar no banco", async () => {
+    dbMock.pool.connect.mockRejectedValue(new Error("erro"));
+
+    const res = await request(app).post("/api/rodovias/export");
+
+    expect(res.status).toBe(500);
   });
 
 });

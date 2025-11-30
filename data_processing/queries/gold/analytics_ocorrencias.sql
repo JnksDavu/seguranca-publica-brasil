@@ -15,7 +15,11 @@ amostra AS (
         SELECT 
             f.id_fato_sinesp AS id_ocorrencia,
 
-		    f.quantidade_ocorrencias,
+		    case 
+		    	when f.quantidade_ocorrencias = 0
+		    	then 1
+		    	else f.quantidade_ocorrencias
+		    end 				as quantidade_ocorrencias,
 		    f.quantidade_vitimas,
             case 
                 when categoria_crime in ('Suicídio','Crimes Violentos Letais','Mortes Envolvendo Agentes','Trânsito') or cr.nome_crime = 'Mortes a esclarecer (sem indício de crime)'
@@ -57,7 +61,7 @@ SELECT
 		    quantidade_ocorrencias,
 		    quantidade_vitimas,
             quantidade_mortos,
-		    peso_apreendido,
+		    concat(peso_apreendido,' kg') as peso_apreendido,
 		    
 		    total_feminino,
 		    total_masculino,
@@ -80,7 +84,6 @@ SELECT
 		    categoria_crime
 FROM amostra
 ORDER BY data_completa DESC;
-
 
 DROP TABLE IF EXISTS gold.analytics_ocorrencias;
 
