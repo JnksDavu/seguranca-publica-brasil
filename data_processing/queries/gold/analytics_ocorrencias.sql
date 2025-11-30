@@ -61,7 +61,7 @@ SELECT
 		    quantidade_ocorrencias,
 		    quantidade_vitimas,
             quantidade_mortos,
-		    concat(peso_apreendido,' kg') as peso_apreendido,
+		    peso_apreendido as peso_apreendido,
 		    
 		    total_feminino,
 		    total_masculino,
