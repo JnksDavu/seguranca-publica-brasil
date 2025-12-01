@@ -66,4 +66,20 @@ const getCrime = async (req, res) => {
   }
 };
 
-module.exports = { getCalendario,getLocalidade,getTipoAcidente,getCrime };
+const getEstabelecimento = async (req, res) => {
+
+  let Query = `
+    SELECT *
+    from silver.dim_estabelecimento
+    where 1 = 1
+  `;
+  try {
+    const result = await query(Query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao consultar dim_estabelecimento:', error);
+    res.status(500).json({ error: 'Erro ao consultar crime' });
+  }
+};
+
+module.exports = { getCalendario,getLocalidade,getTipoAcidente,getCrime,getEstabelecimento };

@@ -229,7 +229,7 @@ const getIndicadores = async (req, res) => {
       COUNT(*) AS total_registros,
       COUNT(*) AS total_ocorrencias,
       SUM(quantidade_vitimas) AS total_vitimas,
-      SUM(peso_apreendido) AS peso_apreendido_total,
+      concat(SUM(peso_apreendido),' KG') AS peso_apreendido_total,
       SUM(total_feminino) AS vitimas_femininas,
       SUM(total_masculino) AS vitimas_masculinas,
       SUM(total_nao_informado) AS vitimas_nao_informadas,

@@ -7,6 +7,7 @@ const rodoviasRoutes = require('./routes/rodovias');
 const dimensoesRoutes = require('./routes/dimensoes');
 const ocorrenciasRoutes = require('./routes/ocorrencias');
 const swaggerRoutes = require('./routes/swagger');
+const presidiosRoutes = require('./routes/presidios');
 
 const app = express();
 
@@ -31,5 +32,6 @@ app.use(authMiddleware);
 app.use('/api/rodovias', rodoviasRoutes);
 app.use('/api/dimensoes', dimensoesRoutes);
 app.use('/api/ocorrencias', ocorrenciasRoutes);
+app.use('/api/presidios', presidiosRoutes);
 
 module.exports = app;

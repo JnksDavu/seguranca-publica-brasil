@@ -17,5 +17,10 @@ export async function getTipoAcidente() {
 
 export async function getCrime() {
   const res = await api.get('/dimensoes/crime');
-  return res.data; // array de objetos do dim_tipo_acidente
+  return res.data; // array de objetos do dim_crime
+}
+
+export async function getEstabelecimento() {
+  const res = await api.get('/dimensoes/estabelecimento');
+  return res.data; // array de objetos do dim_estabelecimento
 }

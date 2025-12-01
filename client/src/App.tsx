@@ -4,6 +4,7 @@ import { Rodovias } from './components/Rodovias';
 import { Ocorrencias } from './components/Ocorrencias';
 import { Acesso } from './components/Acesso';
 import { Fontes } from './components/Fontes';
+import { Presidios } from './components/Presidios';
 export default function App() {
   const [currentPage, setCurrentPage] = useState('rodovias');
 
@@ -13,6 +14,8 @@ export default function App() {
         return <Rodovias />;
       case 'ocorrencias':
         return <Ocorrencias />;
+      case 'presidios':
+        return <Presidios />;
       case 'fontes':
         return <Fontes />;
       case 'acesso aos dados':

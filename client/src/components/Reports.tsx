@@ -186,10 +186,17 @@ export default function Reports<Row>({
 
         <div className="relative w-full overflow-x-auto rounded-lg border border-blue-100">
           <table className="min-w-full text-sm">
-            <thead className="bg-blue-50">
+          <thead className="bg-blue-50">
               <tr>
                 {columns.map((c) => (
-                  <th key={c.header} className={`px-2 py-2 text-left font-semibold text-blue-700 ${c.className ?? ''}`}>{c.header}</th>
+                  <th
+                    key={c.header}
+                    title={c.header} // mostra o título completo no tooltip
+                    className={`px-2 py-2 text-left font-semibold text-blue-700 whitespace-nowrap overflow-hidden text-ellipsis ${c.className ?? ''}`}
+                    style={{ maxWidth: 180 }} // ajuste conforme necessário ou torne dinâmico
+                  >
+                    {c.header}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -204,7 +211,17 @@ export default function Reports<Row>({
                 pagedData.map((row, i) => (
                   <tr key={rowKey(row, i) ?? i} className="hover:bg-blue-50 border-b border-blue-100 odd:bg-white even:bg-blue-50/40">
                     {columns.map((c, ci) => (
-                      <td key={ci} className={`px-2 py-1 ${c.className ?? ''}`}>{c.render(row)}</td>
+                      <td
+                        key={ci}
+                        className={`px-2 py-1 ${c.className ?? ''} whitespace-nowrap overflow-hidden text-ellipsis`}
+                        style={{ maxWidth: 180 }}
+                        title={(() => {
+                          const content = c.render(row);
+                          return typeof content === 'string' ? content : undefined;
+                        })()}
+                      >
+                        {c.render(row)}
+                      </td>
                     ))}
                   </tr>
                 ))
