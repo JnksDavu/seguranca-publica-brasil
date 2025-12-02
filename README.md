@@ -147,7 +147,7 @@ O gerenciamento do projeto foi realizado utilizando a metodologia Ágil/Kanban, 
 ## Registro de Decisões (ADR/RFC)
 As decisões arquiteturais são registradas no formato de RFCs para manter o histórico de evolução do software e justificar escolhas técnicas.
 
-* [RFC-001: Escolha da Arquitetura Medallion](./RFC.md)
+* [RFC-001: Escolha da Arquitetura Medallion](docs/RFC.md)
 
 <a id="arquitetura"></a>
 ## Arquitetura
