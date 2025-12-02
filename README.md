@@ -302,13 +302,28 @@ Existem 2 tipos de extrações dessas bases de dados públicos, sendo elas:
 
 #### Medallion Architecture
 * **Bronze:** Dados brutos (Raw) armazenados conforme extraídos das fontes públicas.
+
+<img width="854" height="262" alt="image" src="https://github.com/user-attachments/assets/9023d4bd-2e4c-4faf-bc96-1fd86fd29f6e" />
+
 * **Silver:** Dados limpos, tipados, com tratamento de nulos e remoção de duplicatas.
+
+<img width="900" height="448" alt="image" src="https://github.com/user-attachments/assets/b7af5abc-f7ca-4d16-b371-fbc8d8ef4a33" />
+
 * **Gold:** Modelagem dimensional (Star Schema) pronta para consumo da API.
 
+<img width="978" height="222" alt="image" src="https://github.com/user-attachments/assets/f6375c3b-5ab6-4ee8-93fb-ca7f6fe7d064" />
+
 **Esquema do Banco de Dados (PostgreSQL):**
-* **Dimensões:** `dim_calendario`, `dim_localidade`, `dim_tipo_acidente`, `dim_veiculos`.
-* **Fatos:** `fato_ocorrencias`, `fato_populacao`, `fato_rodovias`.
-* **Queries:** As consultas Gold são otimizadas para leitura rápida nos dashboards.
+* **Dimensões:** `dim_calendario`, `dim_localidade`, `dim_tipo_acidente`, `dim_veiculos`,`dim_crime`,`dim_estabelecimento`.
+* **Fatos:** `fato_ocorrencias`, `fato_populacao`, `fato_rodovias`,`fato_percapita_rodovias`,`fato_presidios`.
+* **Queries:** As consultas Gold são otimizadas para leitura rápida nos dashboards, `analytics_ocorrencias`,`analytics_presidios`,`analytics_rodovias`.
+
+**Tratativa de dados:**
+
+* **Regex:** Utilizado regex para normalização e padronização dos dados para ligação e agrupamentos.
+* **Translate:** Normalização de caracteres especiais.
+* **Cross-Join:** Manipulação de contexto de tabelas.
+* **Índices*:** Performance na ligação e segmentação das tabelas e consultas.
 
 <a id="back-end"></a>
 ## Back-end
@@ -461,6 +476,8 @@ Video:
 
 - https://www.youtube.com/watch?v=oWTh5biNAoM
 
+Páginas:
+
 <img width="3024" height="1644" alt="image" src="https://github.com/user-attachments/assets/442da891-88ad-46cf-8aa7-592b5dbf188c" />
 
 <img width="3012" height="1648" alt="image" src="https://github.com/user-attachments/assets/0be4f9da-aceb-4bed-b992-eb2012d7e8a5" />
@@ -470,6 +487,10 @@ Video:
 <img width="3024" height="1634" alt="image" src="https://github.com/user-attachments/assets/b9bade27-3fc1-4cb4-932e-10bab51f3632" />
 
 <img width="3024" height="1636" alt="image" src="https://github.com/user-attachments/assets/6e493b38-a88e-4a24-b981-2bc033d2e721" />
+
+<img width="3020" height="1642" alt="image" src="https://github.com/user-attachments/assets/1af6734e-306f-4583-adb1-898ff9f163d5" />
+
+<img width="3016" height="1638" alt="image" src="https://github.com/user-attachments/assets/57b611f2-aa39-4085-bd91-c97b9359b11f" />
 
 <a id="referências"></a>
 ## Referências
