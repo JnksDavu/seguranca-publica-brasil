@@ -103,6 +103,21 @@ para alinhar o código à arquitetura.
 * Tempo de resposta da API deve ser otimizado para consultas analíticas.
 * A documentação da API deve ser interativa (*Try it out*).
 
+Requisitos Funcionais (RF):
+
+	RF01: Permitir a exportação de dados em CSV e JSON.
+	RF02: Exibir os dados em dashboards e mapas interativos.
+	RF03: Aplicar filtros pelas dimensãos disponibilizadas.
+	RF04: Autenticação de requests via JWT.
+	RF05: Disponibilização de API pública para os dados.
+	
+Requisitos Não-Funcionais (RNF):
+	
+	RNF01: Alta disponibilidade e performance.
+	RNF02: Interface responsiva.
+	RNF03: Segurança na autenticação e transmissão dos dados.
+	RNF04: Performance de queries e sinalização de carregamentos.
+
 ### 3.2. Considerações de Design
 Utilização de Design System baseado em componentes **Radix UI** e **Tailwind CSS** para garantir acessibilidade, consistência visual e responsividade em diferentes dispositivos.
 
