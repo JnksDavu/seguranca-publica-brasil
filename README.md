@@ -300,6 +300,16 @@ Existem 2 tipos de extrações dessas bases de dados públicos, sendo elas:
 
    <img width="3004" height="1350" alt="image" src="https://github.com/user-attachments/assets/5bab08a7-77b4-4d44-a7de-e79fcbb940da" />
 
+
+   ## Motivos para uso do n8n:
+   
+   - Ferramenta de ETL.
+   - Cron centralizado e com melhor visibilidade.
+   - Logs automáticos de execução.
+   - Avisos de erro para o email:
+<img width="2844" height="1626" alt="image" src="https://github.com/user-attachments/assets/c1da523c-19f0-4632-a692-de3346835628" />
+   - Facilidade em Web Scrapping.
+
 ### Modelagem de Dados
 
 #### Medallion Architecture
