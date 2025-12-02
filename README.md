@@ -30,7 +30,6 @@
 - [Qualidade e Segurança](#qualidade-e-segurança-do-código)
 - [Instruções de Execução](#instruções-de-execução)
 - [Resultados](#resultados)
-- [Conclusão](#conclusão)
 - [Referências](#referências)
 
 <a id="descrição"></a>
@@ -119,7 +118,7 @@ Utilização de Design System baseado em componentes **Radix UI** e **Tailwind C
 
     #8657E6
 
-<img width="1600" height="1200" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
+<img width="1400" height="1000" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
 
 ### 3.3. Stack Tecnológica
 * **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React, TypeScript.
@@ -487,8 +486,5 @@ Video:
 * [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
 * [SENAPPEN - Dados Prisionais](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
 * [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
-* 
 ## Padrão commits
 * [Commits](https://dev.to/renatoadorno/padroes-de-commits-commit-patterns-41co)
-
-
