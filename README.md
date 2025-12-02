@@ -19,6 +19,7 @@
 - [Metodologia Ágil](#metodologia-agil)
 - [Registro de Decisões (ADR/RFC)](#registro-de-decisões-adr-rfc)
 - [Arquitetura](#arquitetura)
+- [Diagramas](#diagramas)
 - [Infraestrutura Cloud](#infraestrutura)
 - [Dados (ETL)](#dados-etl)
 - [Back-end](#back-end)
@@ -154,10 +155,25 @@ As decisões arquiteturais são registradas no formato de RFCs para manter o his
 
 <img width="1413" height="527" alt="download" src="https://github.com/user-attachments/assets/19dc3d55-dcf3-4ad2-9a77-7bc6ce30596b" />
 
-### Visão C4
-A arquitetura segue o modelo Client-Server com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
+- Infraestrutura: Oracle Cloud, NGINX e pm2
+- Back-End: Node express JS,Jest
+- Front-End: React + Vite + Tailwind
+- Banco de dados: PostgreSQL
+- Engenharia de dados: n8n e scripts Python
+- Observabilidade: pm2.io
+- Qualidade e segurança: SonarCloud e JWT
+- Dóminio/DNS: Hostinger
 
-![Diagrama C4](caminho/para/imagem.png)
+# Diagramas
+
+## DBMS (notação UML)
+
+<img width="903" height="809" alt="image" src="https://github.com/user-attachments/assets/f71cbe7c-b4db-49da-86f1-d8c35317a6f1" />
+
+## Caso de uso
+
+<img width="2816" height="1536" alt="caso_uso" src="https://github.com/user-attachments/assets/cdcc57e5-27df-4772-92a2-280e9339645c" />
+
 
 ### Fluxo de Dados
 1.  **Ingestão:** n8n e scripts Python coletam dados (Web Scraping/APIs).
@@ -186,6 +202,8 @@ O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de
 ## Fontes de Dados
 
 O pipeline de ingestão de dados consome informações de cinco fontes oficiais distintas, utilizando métodos específicos de coleta e tratamento para cada uma.
+
+<img width="796" height="447" alt="image" src="https://github.com/user-attachments/assets/a5c8e5cc-84b5-4d26-ae79-4c07b16176a8" />
 
 ### 1. IBGE – API SIDRA
 * **URL:** [https://apisidra.ibge.gov.br](https://apisidra.ibge.gov.br)
@@ -325,11 +343,27 @@ SPA (Single Page Application) desenvolvida com **Vite** e **React**, focada em p
 
 <a id="testes"></a>
 ## Testes
-O projeto adota práticas de TDD para o backend, garantindo a estabilidade das regras de negócio.
 
 * **Ferramenta:** Jest + Supertest.
 * **Tipos de Teste:** Unitários e Integração de rotas.
 * **Relatórios:** Cobertura de código gerada via `lcov` na pasta `coverage/`.
+
+# Front-End:
+
+<img width="1070" height="480" alt="image" src="https://github.com/user-attachments/assets/eabe291f-a9d5-4d1c-9707-9b944a4cf8ec" />
+
+Resultado: cobertura 71.42%
+Componente testado: Navbar
+Repositório: client/src/tests
+
+# Back-End:
+
+<img width="1916" height="788" alt="image" src="https://github.com/user-attachments/assets/ece527f8-258c-42b1-bfc0-23fda9ea0b4e" />
+
+Resultado: cobertura 65.76%
+Rotas testadas: rodovias,ocorrencias,presidios,swagger e auth
+Repositório: server/src/tests/controllers
+
 * **Cobertura Atual:** Backend > 75%
 
 <a id="cicd"></a>
@@ -416,9 +450,17 @@ n8n: http://168.138.126.135:5678
 
 <img width="2368" height="1524" alt="image" src="https://github.com/user-attachments/assets/b4145ad2-8fce-4e8c-b737-3eb6d6b9006d" />
 
+QR CODE:
+
+<img width="540" height="540" alt="image" src="https://github.com/user-attachments/assets/054318c7-2b8f-4eb7-b9ad-711986afba71" />
+
 Aplicação: 
 
-https://seguranca-publica-brasil.com
+- https://seguranca-publica-brasil.com
+
+Video: 
+
+- https://www.youtube.com/watch?v=oWTh5biNAoM
 
 <img width="3024" height="1644" alt="image" src="https://github.com/user-attachments/assets/442da891-88ad-46cf-8aa7-592b5dbf188c" />
 
