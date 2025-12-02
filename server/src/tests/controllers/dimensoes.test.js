@@ -11,7 +11,6 @@ jest.mock("../../config/db", () => ({
 const dbMock = require("../../config/db");
 
 describe("DIMENSÕES - /api/dimensoes", () => {
-
   beforeEach(() => jest.clearAllMocks());
 
   test("GET /calendario", async () => {
@@ -58,4 +57,44 @@ describe("DIMENSÕES - /api/dimensoes", () => {
     expect(res.body[0].nome).toBe("Furto");
   });
 
+  test("GET /estabelecimento", async () => {
+    const rows = [{ id: 10, nome: "Presídio A" }];
+    dbMock.query.mockResolvedValueOnce({ rows });
+
+    const res = await request(app).get("/api/dimensoes/estabelecimento");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(rows);
+  });
+
+  test.each([
+    "/api/dimensoes/calendario",
+    "/api/dimensoes/localidade",
+    "/api/dimensoes/tipoAcidente",
+    "/api/dimensoes/crime",
+    "/api/dimensoes/estabelecimento"
+  ])("GET %s should return empty array when no rows", async (path) => {
+    dbMock.query.mockResolvedValueOnce({ rows: [] });
+
+    const res = await request(app).get(path);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  test.each([
+    "/api/dimensoes/calendario",
+    "/api/dimensoes/localidade",
+    "/api/dimensoes/tipoAcidente",
+    "/api/dimensoes/crime",
+    "/api/dimensoes/estabelecimento"
+  ])("GET %s should handle DB error with 500", async (path) => {
+    dbMock.query.mockRejectedValueOnce(new Error("DB error"));
+
+    const res = await request(app).get(path);
+
+    expect(res.status).toBe(500);
+    const message = res.body && (res.body.error || res.body.message);
+    expect(message).toBeDefined();
+  });
 });

@@ -191,9 +191,9 @@ export default function Reports<Row>({
                 {columns.map((c) => (
                   <th
                     key={c.header}
-                    title={c.header} // mostra o título completo no tooltip
+                    title={c.header} 
                     className={`px-2 py-2 text-left font-semibold text-blue-700 whitespace-nowrap overflow-hidden text-ellipsis ${c.className ?? ''}`}
-                    style={{ maxWidth: 180 }} // ajuste conforme necessário ou torne dinâmico
+                    style={{ maxWidth: 180 }} 
                   >
                     {c.header}
                   </th>

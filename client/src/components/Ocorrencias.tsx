@@ -294,7 +294,6 @@ export function Ocorrencias() {
     flag_fim_de_semana: (selectedWeekend as (string | { value: string })[]).map(v => typeof v === 'string' ? v : v.value).join(',') || undefined,
     uf: (selectedUF as (string | { value: string })[]).map(u => typeof u === 'string' ? u : u.value).join(',') || undefined,
     municipio: (selectedMunicipio as (string | { value: string })[]).map(m => typeof m === 'string' ? m : m.value).join(',') || undefined,
-    // Ajuste para ocorrências: filtrar por evento
     evento: (selectedTipoCrime as (string | { value: string })[]).map(t => typeof t === 'string' ? t : t.value).join(',') || undefined,
     categoria_crime: (selectedCategoriaCrime as (string | { value: string })[]).map(c => typeof c === 'string' ? c : c.value).join(',') || undefined,
   });
