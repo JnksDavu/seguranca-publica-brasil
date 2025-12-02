@@ -306,9 +306,9 @@ Existem 2 tipos de extrações dessas bases de dados públicos, sendo elas:
    - Ferramenta de ETL.
    - Cron centralizado e com melhor visibilidade.
    - Logs automáticos de execução.
+   - Facilidade em Web Scrapping.
    - Avisos de erro para o email:
 <img width="2844" height="1626" alt="image" src="https://github.com/user-attachments/assets/c1da523c-19f0-4632-a692-de3346835628" />
-   - Facilidade em Web Scrapping.
 
 ### Modelagem de Dados
 
