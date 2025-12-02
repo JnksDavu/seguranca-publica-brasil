@@ -30,6 +30,8 @@
 - [Qualidade e Segurança](#qualidade-e-segurança-do-código)
 - [Instruções de Execução](#instruções-de-execução)
 - [Resultados](#resultados)
+- [Conclusão](#conclusão)
+- [Próximos passos](#próximos-passos)
 - [Referências](#referências)
 
 <a id="descrição"></a>
@@ -491,6 +493,24 @@ Páginas:
 <img width="3020" height="1642" alt="image" src="https://github.com/user-attachments/assets/1af6734e-306f-4583-adb1-898ff9f163d5" />
 
 <img width="3016" height="1638" alt="image" src="https://github.com/user-attachments/assets/57b611f2-aa39-4085-bd91-c97b9359b11f" />
+
+<a id="Conclusão"></a>
+## Conclusão
+
+O projeto cumpriu seus objetivos voltados no agrupamento das informações, tratamento dos dados e performance de aplicação, trazendo os seguintes diferenciais:	
+
+   - API liberada ao pública com documentação para uso embeded ao site (Swagger).
+	- Gráficos sugestivos.
+	- Filtros dinâmicos de acordo com a tela escolhida.
+	- Performance de busca e tratamento dos dados.
+	- Dados tratados e integrados com bases auxiliares.
+
+<a id="Próximos passos"></a>
+## Próximos passos
+
+   - Enriquecer os insights
+   - Trazer análise percapita
+   - Realizar lógica de plano pago e plano free de consumo da API
 
 <a id="referências"></a>
 ## Referências
