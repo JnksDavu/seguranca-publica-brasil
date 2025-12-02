@@ -19,6 +19,7 @@
 - [Metodologia Ágil](#metodologia-agil)
 - [Registro de Decisões (ADR/RFC)](#registro-de-decisões-adr-rfc)
 - [Arquitetura](#arquitetura)
+- [Diagramas](#diagramas)
 - [Infraestrutura Cloud](#infraestrutura)
 - [Dados (ETL)](#dados-etl)
 - [Back-end](#back-end)
@@ -29,7 +30,6 @@
 - [Qualidade e Segurança](#qualidade-e-segurança-do-código)
 - [Instruções de Execução](#instruções-de-execução)
 - [Resultados](#resultados)
-- [Conclusão](#conclusão)
 - [Referências](#referências)
 
 <a id="descrição"></a>
@@ -118,7 +118,7 @@ Utilização de Design System baseado em componentes **Radix UI** e **Tailwind C
 
     #8657E6
 
-<img width="1600" height="1200" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
+<img width="1400" height="1000" alt="Cores" src="https://github.com/user-attachments/assets/d5f8cd7d-6389-49fd-a5f2-bb47bab32d30" />
 
 ### 3.3. Stack Tecnológica
 * **Front-end:** React, Vite, Tailwind, Leaflet, Swagger UI React, TypeScript.
@@ -154,10 +154,25 @@ As decisões arquiteturais são registradas no formato de RFCs para manter o his
 
 <img width="1413" height="527" alt="download" src="https://github.com/user-attachments/assets/19dc3d55-dcf3-4ad2-9a77-7bc6ce30596b" />
 
-### Visão C4
-A arquitetura segue o modelo Client-Server com uma camada dedicada de Engenharia de Dados que alimenta a base analítica.
+- Infraestrutura: Oracle Cloud, NGINX e pm2
+- Back-End: Node express JS,Jest
+- Front-End: React + Vite + Tailwind
+- Banco de dados: PostgreSQL
+- Engenharia de dados: n8n e scripts Python
+- Observabilidade: pm2.io
+- Qualidade e segurança: SonarCloud e JWT
+- Dóminio/DNS: Hostinger
 
-![Diagrama C4](caminho/para/imagem.png)
+# Diagramas
+
+## DBMS (notação UML)
+
+<img width="903" height="809" alt="image" src="https://github.com/user-attachments/assets/f71cbe7c-b4db-49da-86f1-d8c35317a6f1" />
+
+## Caso de uso
+
+<img width="2816" height="1536" alt="caso_uso" src="https://github.com/user-attachments/assets/cdcc57e5-27df-4772-92a2-280e9339645c" />
+
 
 ### Fluxo de Dados
 1.  **Ingestão:** n8n e scripts Python coletam dados (Web Scraping/APIs).
@@ -186,6 +201,8 @@ O projeto está hospedado na **Oracle Cloud Infrastructure (OCI)** na região de
 ## Fontes de Dados
 
 O pipeline de ingestão de dados consome informações de cinco fontes oficiais distintas, utilizando métodos específicos de coleta e tratamento para cada uma.
+
+<img width="796" height="447" alt="image" src="https://github.com/user-attachments/assets/a5c8e5cc-84b5-4d26-ae79-4c07b16176a8" />
 
 ### 1. IBGE – API SIDRA
 * **URL:** [https://apisidra.ibge.gov.br](https://apisidra.ibge.gov.br)
@@ -285,13 +302,28 @@ Existem 2 tipos de extrações dessas bases de dados públicos, sendo elas:
 
 #### Medallion Architecture
 * **Bronze:** Dados brutos (Raw) armazenados conforme extraídos das fontes públicas.
+
+<img width="854" height="262" alt="image" src="https://github.com/user-attachments/assets/9023d4bd-2e4c-4faf-bc96-1fd86fd29f6e" />
+
 * **Silver:** Dados limpos, tipados, com tratamento de nulos e remoção de duplicatas.
+
+<img width="900" height="448" alt="image" src="https://github.com/user-attachments/assets/b7af5abc-f7ca-4d16-b371-fbc8d8ef4a33" />
+
 * **Gold:** Modelagem dimensional (Star Schema) pronta para consumo da API.
 
+<img width="978" height="222" alt="image" src="https://github.com/user-attachments/assets/f6375c3b-5ab6-4ee8-93fb-ca7f6fe7d064" />
+
 **Esquema do Banco de Dados (PostgreSQL):**
-* **Dimensões:** `dim_calendario`, `dim_localidade`, `dim_tipo_acidente`, `dim_veiculos`.
-* **Fatos:** `fato_ocorrencias`, `fato_populacao`, `fato_rodovias`.
-* **Queries:** As consultas Gold são otimizadas para leitura rápida nos dashboards.
+* **Dimensões:** `dim_calendario`, `dim_localidade`, `dim_tipo_acidente`, `dim_veiculos`,`dim_crime`,`dim_estabelecimento`.
+* **Fatos:** `fato_ocorrencias`, `fato_populacao`, `fato_rodovias`,`fato_percapita_rodovias`,`fato_presidios`.
+* **Queries:** As consultas Gold são otimizadas para leitura rápida nos dashboards, `analytics_ocorrencias`,`analytics_presidios`,`analytics_rodovias`.
+
+**Tratativa de dados:**
+
+* **Regex:** Utilizado regex para normalização e padronização dos dados para ligação e agrupamentos.
+* **Translate:** Normalização de caracteres especiais.
+* **Cross-Join:** Manipulação de contexto de tabelas.
+* **Índices*:** Performance na ligação e segmentação das tabelas e consultas.
 
 <a id="back-end"></a>
 ## Back-end
@@ -325,11 +357,27 @@ SPA (Single Page Application) desenvolvida com **Vite** e **React**, focada em p
 
 <a id="testes"></a>
 ## Testes
-O projeto adota práticas de TDD para o backend, garantindo a estabilidade das regras de negócio.
 
 * **Ferramenta:** Jest + Supertest.
 * **Tipos de Teste:** Unitários e Integração de rotas.
 * **Relatórios:** Cobertura de código gerada via `lcov` na pasta `coverage/`.
+
+# Front-End:
+
+<img width="1070" height="480" alt="image" src="https://github.com/user-attachments/assets/eabe291f-a9d5-4d1c-9707-9b944a4cf8ec" />
+
+Resultado: cobertura 71.42%
+Componente testado: Navbar
+Repositório: client/src/tests
+
+# Back-End:
+
+<img width="1916" height="788" alt="image" src="https://github.com/user-attachments/assets/ece527f8-258c-42b1-bfc0-23fda9ea0b4e" />
+
+Resultado: cobertura 65.76%
+Rotas testadas: rodovias,ocorrencias,presidios,swagger e auth
+Repositório: server/src/tests/controllers
+
 * **Cobertura Atual:** Backend > 75%
 
 <a id="cicd"></a>
@@ -416,9 +464,19 @@ n8n: http://168.138.126.135:5678
 
 <img width="2368" height="1524" alt="image" src="https://github.com/user-attachments/assets/b4145ad2-8fce-4e8c-b737-3eb6d6b9006d" />
 
+QR CODE:
+
+<img width="540" height="540" alt="image" src="https://github.com/user-attachments/assets/054318c7-2b8f-4eb7-b9ad-711986afba71" />
+
 Aplicação: 
 
-https://seguranca-publica-brasil.com
+- https://seguranca-publica-brasil.com
+
+Video: 
+
+- https://www.youtube.com/watch?v=oWTh5biNAoM
+
+Páginas:
 
 <img width="3024" height="1644" alt="image" src="https://github.com/user-attachments/assets/442da891-88ad-46cf-8aa7-592b5dbf188c" />
 
@@ -429,6 +487,10 @@ https://seguranca-publica-brasil.com
 <img width="3024" height="1634" alt="image" src="https://github.com/user-attachments/assets/b9bade27-3fc1-4cb4-932e-10bab51f3632" />
 
 <img width="3024" height="1636" alt="image" src="https://github.com/user-attachments/assets/6e493b38-a88e-4a24-b981-2bc033d2e721" />
+
+<img width="3020" height="1642" alt="image" src="https://github.com/user-attachments/assets/1af6734e-306f-4583-adb1-898ff9f163d5" />
+
+<img width="3016" height="1638" alt="image" src="https://github.com/user-attachments/assets/57b611f2-aa39-4085-bd91-c97b9359b11f" />
 
 <a id="referências"></a>
 ## Referências
@@ -445,8 +507,5 @@ https://seguranca-publica-brasil.com
 * [Ministério da Justiça - SINESP](https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/dados-nacionais-1/base-de-dados-e-notas-metodologicas-dos-gestores-estaduais-sinesp-vde-2022-e-2023)
 * [SENAPPEN - Dados Prisionais](https://www.gov.br/senappen/pt-br/servicos/sisdepen/bases-de-dados)
 * [FIPE - Fundação Instituto de Pesquisas Econômicas](https://fipe.online/)
-* 
 ## Padrão commits
 * [Commits](https://dev.to/renatoadorno/padroes-de-commits-commit-patterns-41co)
-
-
